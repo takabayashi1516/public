@@ -1,0 +1,15 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>store body temperature</title>
+  <script th:inline="javascript">
+  /*<![CDATA[*/
+  var data = /*[[${data}]]*/null;
+  /*]]>*/
+  var jsn = JSON.parse(data);
+  </script>
+</head>
+<body>
+  <p th:text="${data}" />
+</body>
+</html>

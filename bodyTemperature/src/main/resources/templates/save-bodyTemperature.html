@@ -1,0 +1,49 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>store body temperature</title>
+  <script th:inline="javascript">
+  /*<![CDATA[*/
+  var id = /*[[${id}]]*/null;
+  var epoch = /*[[${epoch}]]*/null;
+  /*]]>*/
+  window.addEventListener("load", function () {
+    var slctFrm = document.getElementById("selectForm");
+    slctFrm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var xhr = new XMLHttpRequest();
+      var fdt = new FormData(slctFrm);
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) { // complete to receive response.
+          if (xhr.status == 200 || xhr.status == 304) {
+            document.getElementById("result").innerHTML = xhr.responseText;
+          } else {
+            document.getElementById("result").innerHTML = 'Failed. HttpStatus: ' + xhr.statusText;
+          }
+        }
+      }
+
+      try {
+        var _bodyTemperature = fdt.get("bodyTemperature");
+        xhr.open("POST", "/personal/" + id + "/" + epoch + "?");
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.send("data=" + _bodyTemperature.toString());
+      } catch (_err) {
+        document.getElementById("result").innerHTML = _err + '<br>';
+      }
+    });
+  });
+
+  </script>
+</head>
+<body>
+  <form id="selectForm" action="/" method="GET" enctype="multipart/form-data">
+    <label for="bodyTemperature">body temperature:</label>
+    <input id="bodyTemperature" name="bodyTemperature" size="8" value="0.00"><br>
+    <input type="submit">
+  </form>
+  <hr>
+  <div id='result'></div>
+</body>
+</html>
