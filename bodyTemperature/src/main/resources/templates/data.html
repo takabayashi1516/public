@@ -1,15 +1,135 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>store body temperature</title>
+  <title>line chart body temperature</title>
+  <script src='chart/Chart.min.js'></script>
+  <script src='chart/utils.js'></script>
   <script th:inline="javascript">
   /*<![CDATA[*/
-  var data = /*[[${data}]]*/null;
+  const C_DATA = /*[[${data}]]*/null;
   /*]]>*/
-  var jsn = JSON.parse(data);
+  const C_JSON = JSON.parse(C_DATA);
+  var barChartData = {
+      labels: [],
+      datasets: [],
+      names: [],
+    };
+    var complexChartOption = {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Body Temperature'
+      },
+      scales: {
+        yAxes: [
+          {
+            id: 'y-axis',
+            type: 'linear',
+            position: 'left',
+            ticks: {
+              max: 42.00,
+              min: 35.00,
+              stepSize: 1.00
+            },
+            scaleLabel: {
+              display: true,
+              labelString: 'Body Temperature [deg-C]',
+            },
+          },
+        ],
+      }
+    };
+
+    function getDateString(_epoch) {
+      var _d = new Date(_epoch);
+      return ("0" + (_d.getFullYear()).toString()).slice(-4) + "/" + ("0" + (_d.getMonth() + 1).toString()).slice(-2) + "/" + ("0" + (_d.getDate()).toString()).slice(-2);
+    }
+
+    function getRamdom(min, max) {
+        return Math.floor(Math.random() * (max - min) + min);
+    }
+
+    C_JSON.some(function (_rec) {
+      if (barChartData.names.indexOf(_rec.name) < 0) {
+        var _color_r = getRamdom(10, 250);
+        var _color_g = getRamdom(10, 250);
+        var _color_b = getRamdom(10, 250);
+        barChartData.names.push(_rec.name);
+        barChartData.datasets.push({
+          type: 'line',
+          label: _rec.name,
+          data: [],
+          borderColor : "rgba(" + _color_r + "," + _color_g + "," + _color_b +", 0.8)",
+          backgroundColor : "rgba(" + _color_r + "," + _color_g + "," + _color_b +", 0.05)",
+          yAxisID: 'y-axis',
+          fill: false,
+        });
+      }
+    });
+
+    var minEpoch = -1;
+    var maxEpoch = -1;
+    C_JSON.some(function (_rec) {
+      if (minEpoch < 0) {
+        minEpoch = _rec.timestamp;
+      } else if (minEpoch > _rec.timestamp) {
+        minEpoch = _rec.timestamp;
+      }
+      if (maxEpoch < _rec.timestamp) {
+        maxEpoch = _rec.timestamp;
+      }
+    });
+    var ms_p_d = 24 * 3600 * 1000;
+    var _labels = barChartData.labels;
+    for (var _date = minEpoch; _date < maxEpoch + ms_p_d; _date += ms_p_d) {
+      _labels.push(getDateString(_date));
+    }
+
+    barChartData.names.some(function (_name, _idx, _arr) {
+      var _data = barChartData.datasets[_idx].data;
+      var _labels = barChartData.labels;
+      C_JSON.filter(function (__rec) { return (_name === __rec.name); }).some(function (_rec) {
+        var _date = getDateString(_rec.timestamp);
+        var _data_index = _labels.indexOf(_date);
+        while (_data.length < _data_index) {
+          _data.push(NaN);
+        }
+        if (_data.length <= _data_index) {
+          _data.push(_rec.temperature.toString());
+        }
+      });
+    });
+
+    window.onload = function() {
+      let ctx = document.getElementById('data_chart').getContext('2d');
+      window.myLine = new Chart(ctx, {
+          type: 'bar',
+          data: barChartData,
+          options: complexChartOption
+      });
+      let tbl_val = '<table border="1" width="500" cellspacing="0" cellpadding="5" bordercolor="#333333">'
+              + '<tr bgcolor="#CCCCCC"><th>id</th><th>name</th><th>date</th><th>body<br>temperature<br>[deg-C]</th></tr>';
+      C_JSON.some(function (_data) {
+        tbl_val += '<tr>'
+                + '<td>' + _data.id.toString() + '</td>'
+                + '<td>' + _data.name + '</td>'
+                + '<td>' + getDateString(_data.timestamp) + '</td>'
+                + '<td>' + _data.temperature.toString() + '</td>'
+                + '</tr>';
+      });
+      tbl_val += '</table>';
+      document.getElementById('data_table').innerHTML += tbl_val;
+    }
   </script>
 </head>
 <body>
+  <div style='width:100%;'>
+    <canvas id='data_chart'></canvas>
+  </div>
+<hr>
+  <div id='data_table'></div>
+<!--
   <p th:text="${data}" />
+-->
 </body>
 </html>

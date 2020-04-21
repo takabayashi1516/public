@@ -73,7 +73,7 @@ public class BodyTemperatureApplication {
 //			e.printStackTrace();
 		}
 		System.out.println("update rc=" + rc);
-		broadcastMail();
+//		broadcastMail();
 	}
 
 	@Scheduled(cron = "0 30 8 * * *", zone = "Asia/Tokyo")

@@ -29,32 +29,19 @@ public class ThymeleafController {
 	@Autowired
 	private MySqlHealthView mMySqlHealthView;
 
+	@RequestMapping(value = "/", method=RequestMethod.GET)
+	public String getAllData(
+			Model model) {
+		ArrayList<HealthViewEntity> list = mMySqlHealthView.getAll();
+		return getReferenceHealthDataPage(list, model);
+	}
+
 	@RequestMapping(value = "/data", method=RequestMethod.GET)
 	public String getPersonalData(
 			@RequestParam(value = "name") String name,
 			Model model) {
 		ArrayList<HealthViewEntity> list = mMySqlHealthView.get(name);
-		Json json = new Json();
-		try {
-			json.load("[]");
-			for (int i = 0; i < list.size(); i++) {
-				HealthViewEntity e = list.get(i);
-				Json nest = new Json();
-				nest.load("{}");
-				nest.set("id", e.getId());
-				nest.set("person", e.getPerson());
-				nest.set("name", e.getName());
-				nest.set("mail", e.getMail());
-				nest.set("timestamp", e.getTimeStamp());
-				nest.set("temperature", e.getTemperature());
-				json.set(null, i, nest.get(null));
-			}
-			model.addAttribute("data", json.get(null).toString());
-		} catch (JsonMappingException e) {
-		} catch (JsonProcessingException e) {
-		} catch (IOException e) {
-		}
-		return "data";
+		return getReferenceHealthDataPage(list, model);
 	}
 
 	@RequestMapping(value = "/personal", method=RequestMethod.GET)
@@ -110,5 +97,29 @@ public class ThymeleafController {
 		}
 		model.addAttribute("result", result);
 		return "result";
+	}
+
+	private String getReferenceHealthDataPage(ArrayList<HealthViewEntity> list, Model model) {
+		Json json = new Json();
+		try {
+			json.load("[]");
+			for (int i = 0; i < list.size(); i++) {
+				HealthViewEntity e = list.get(i);
+				Json nest = new Json();
+				nest.load("{}");
+				nest.set("id", e.getId());
+				nest.set("person", e.getPerson());
+				nest.set("name", e.getName());
+				nest.set("mail", e.getMail());
+				nest.set("timestamp", e.getTimeStamp());
+				nest.set("temperature", e.getTemperature());
+				json.set(null, i, nest.get(null));
+			}
+			model.addAttribute("data", json.get(null).toString());
+		} catch (JsonMappingException e) {
+		} catch (JsonProcessingException e) {
+		} catch (IOException e) {
+		}
+		return "data";
 	}
 }
