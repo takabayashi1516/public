@@ -27,7 +27,7 @@
             type: 'linear',
             position: 'left',
             ticks: {
-              max: 42.00,
+              max: 40.00,
               min: 35.00,
               stepSize: 1.00
             },
@@ -96,6 +96,8 @@
         }
         if (_data.length <= _data_index) {
           _data.push(_rec.temperature.toString());
+        } else {
+          _data[_data.length - 1] = _rec.temperature.toString();
         }
       });
     });
