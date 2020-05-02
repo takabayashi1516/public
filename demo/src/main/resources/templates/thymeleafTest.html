@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Getting Started: Serving Web Content</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <script th:inline="javascript">
+  /*<![CDATA[*/
+  var data1 = /*[[${data1}]]*/null;
+  var data2 = /*[[${data2}]]*/null;
+  /*]]>*/
+  console.log(data1 + " " + data2);
+  </script>
+</head>
+<body>
+  <p th:text="'1. ' + ${data1} + '!'" />
+  <p th:text="'2. ' + ${data2} + '!'" />
+</body>
+</html>

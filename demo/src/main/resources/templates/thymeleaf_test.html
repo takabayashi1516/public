@@ -1,0 +1,13 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<script th:inline="javascript">
+/*<![CDATA[*/
+	const data = /*[[${data}]]*/null;
+	console.log(JSON.stringify(JSON.parse(data)));
+/*]]>*/
+</script>
+</head>
+<body>
+	<p th:text="${data}">
+</body>
+</html>

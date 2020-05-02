@@ -1,0 +1,53 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.5.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-integration'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	compile group: 'org.eclipse.jetty', name: 'jetty-util'
+	compile group: 'org.eclipse.jetty.websocket', name: 'websocket-client'
+
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	compile "org.springframework.integration:spring-integration-core"
+	compile "org.springframework.integration:spring-integration-ip"
+	compile "org.springframework.integration:spring-integration-mqtt"
+
+	compile 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	compile 'org.springframework.boot:spring-boot-devtools'
+
+	compile 'com.fasterxml.jackson.core:jackson-databind'
+
+	compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
+	runtime('mysql:mysql-connector-java')
+
+	compile('org.springframework.boot:spring-boot-starter-jdbc')
+
+	compile group: 'org.javers', name: 'javers-spring-boot-starter-mongo', version: '3.7.6'
+
+	compile 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	testImplementation 'org.springframework.integration:spring-integration-test'
+}
+
+test {
+	useJUnitPlatform()
+}
+
+jar {
+    baseName = "demo"
+}
