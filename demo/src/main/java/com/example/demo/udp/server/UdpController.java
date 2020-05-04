@@ -24,21 +24,21 @@ public class UdpController implements ApplicationContextAware {
 	}
 
 	@Bean
-	public UdpDispatcher createDispatcher() {
+	public UdpDispatcher createUdpDispatcher() {
 		return new UdpDispatcher(this);
 	}
 
 	@Bean
 	public IntegrationFlow processUdpMessage() {
 		return IntegrationFlows.from(new UnicastReceivingChannelAdapter(mUdpPort))
-				.handle("createDispatcher", "onReceive").get();
+				.handle("createUdpDispatcher", "onReceive").get();
 	}
 
 	public void onReceive(Message<byte[]> m) {
 		if (mEventHandler == null) {
 			return;
 		}
-		mEventHandler.onReceive((String)m.getHeaders().get("ip_address"),
+		mEventHandler.onUdpReceive((String)m.getHeaders().get("ip_address"),
 				(int)m.getHeaders().get("ip_port"), (byte[])m.getPayload(),
 				(long)m.getHeaders().get("timestamp"));
 	}

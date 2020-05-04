@@ -46,6 +46,6 @@ public class UdpClientController {
 	}
 
 	public void onReceive(Message message) {
-		mListener.onReceive(message);
+		mListener.onUdpReceive(message);
 	}
 }

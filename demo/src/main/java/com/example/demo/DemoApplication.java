@@ -26,6 +26,8 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.demo.js.JavaScript;
 import com.example.demo.json.Json;
 import com.example.demo.resource.ResourceController;
+import com.example.demo.tcp.server.TcpController;
+import com.example.demo.tcp.server.TcpEventHandler;
 import com.example.demo.thymeleaf.ThymeleafController;
 import com.example.demo.mqtt.config.Mqtt;
 import com.example.demo.mqtt.handler.MqttSubScribe;
@@ -48,7 +50,8 @@ import com.example.demo.websocket.server.WebSocketEventHandler;
 @SpringBootApplication
 @EnableScheduling
 public class DemoApplication implements UdpEventHandler, UdpClientListener,
-		WebSocketEventHandler, WebSocketClientHandler, MqttSubScribe {
+		WebSocketEventHandler, WebSocketClientHandler, MqttSubScribe, TcpEventHandler {
+	private TcpController mTcpController = null;
 	private WebSocketClientController mWsController = null;
 	private UdpClientController mUdpController = null;
 	private Mqtt mMqtt = null;
@@ -58,6 +61,7 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 	private SqlController mSqlController;
 
 	private static final String MQTT_TOPIC_UDP_RX = "udp_rx";
+	private static final String MQTT_TOPIC_TCP_RX = "tcp_rx";
 
 //	@Autowired
 //	RedisMessagePublisher publisher;
@@ -84,25 +88,22 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 	}
 
 	@Override
-	public void onReceive(String ip_address, int port, byte[] data, long timestamp) {
-		// TODO Auto-generated method stub
+	public void onUdpReceive(String ip_address, int port, byte[] data, long timestamp) {
 		String s = "[" + String.valueOf(timestamp) + "]"
 				+ ip_address + ":" + String.valueOf(port) + "/" + new String(data);
 		System.out.print(s + "\n");
 		try {
 			Mqtt.getSingleton().publishMessage(MQTT_TOPIC_UDP_RX, data, 0, false);
 		} catch (MqttPersistenceException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (MqttException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public void onReceive(Message message) {
+	public void onUdpReceive(Message message) {
 		/*
 		message.getHeaders()
 		{
@@ -138,20 +139,21 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 	@Autowired
 	public void context(ApplicationContext context) {
 		try {
+			mTcpController = context.getBean(TcpController.class);
+		} catch (Exception e) {
+		}
+		try {
 			mUdpController = context.getBean(UdpClientController.class);
 		} catch (Exception e) {
-//			e.printStackTrace();
 		}
 		try {
 			mWsController = context.getBean(WebSocketClientController.class);
 		} catch (Exception e) {
-//			e.printStackTrace();
 		}
 		try {
 			mMqtt = context.getBean(Mqtt.class);
 			Mqtt.getSingleton().setSubscribeHandler(this);
 		} catch (Exception e) {
-//			e.printStackTrace();
 		}
 		try {
 			mMySql = context.getBean(MySql.class);
@@ -251,10 +253,11 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		if (mUdpController != null) {
 			try {
+				System.out.println("udp send");
 				mUdpController.sendTo(("[udp]hello " + String.valueOf((new Date()).getTime())).getBytes());
 			} catch (IOException e) {
 			}
@@ -319,5 +322,18 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 	public void onSubScribe(List<MqttSubscribeModel> messages) {
 		// TODO Auto-generated method stub
 		System.out.println("DemoApplication::onSubScribe");
+	}
+
+	@Override
+	public void onTcpReceive(String id, byte[] data, long timestamp) {
+		String s = "[" + String.valueOf(timestamp) + "]"
+				+ id + " / " + new String(data);
+		System.out.print(s + "\n");
+		try {
+			mTcpController.send(id, data);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 	}
 }
