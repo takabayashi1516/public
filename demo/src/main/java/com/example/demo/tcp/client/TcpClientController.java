@@ -1,4 +1,4 @@
-package com.example.demo.tcp.server;
+package com.example.demo.tcp.client;
 
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -17,8 +17,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.Transformers;
 import org.springframework.integration.ip.dsl.Tcp;
-import org.springframework.integration.ip.tcp.connection.AbstractServerConnectionFactory;
+import org.springframework.integration.ip.tcp.connection.AbstractClientConnectionFactory;
 import org.springframework.integration.ip.tcp.connection.DefaultTcpSocketSupport;
 import org.springframework.integration.ip.tcp.connection.TcpConnection;
 import org.springframework.integration.ip.tcp.connection.TcpConnectionCloseEvent;
@@ -30,20 +31,23 @@ import org.springframework.integration.ip.tcp.connection.TcpConnectionServerList
 import org.springframework.integration.ip.tcp.connection.TcpSocketSupport;
 import org.springframework.integration.ip.tcp.serializer.TcpCodecs;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 @Configuration
-@Profile("server")
-public class TcpController {
+@Profile("client")
+public class TcpClientController {
 	@Value("${tcp_port}")
 	private int mPort;
+	@Value("${tcp_address}")
+	private String mAddress;
 	@Autowired
 	private SocketManager mSocketManager;
 	@Autowired
-	private TcpEventHandler mEventHandler;
+	private TcpClientEventHandler mEventHandler;
 
 	@Bean
-	public TcpDispatcher createTcpDispatcher() {
-		return new TcpDispatcher(this);
+	public TcpClientDispatcher createTcpClientDispatcher() {
+		return new TcpClientDispatcher(this);
 	}
 
 	public void onReceive(Message<byte[]> m) {
@@ -56,23 +60,21 @@ public class TcpController {
 		id += (String)m.getHeaders().get("ip_address");
 		id += ":";
 		id += String.valueOf((int)m.getHeaders().get("ip_tcp_remotePort"));
-		mEventHandler.onTcpReceive(id, (byte[])m.getPayload(),
+		mEventHandler.onTcpClientReceive((byte[])m.getPayload(),
 				(long)m.getHeaders().get("timestamp"));
 	}
 
 	@Bean
-	public IntegrationFlow integrationInboundFlow(ApplicationEventPublisher publisher) {
-		mSocketManager = socketManager();
-		AbstractServerConnectionFactory factory = Tcp.nioServer(mPort)
+	public IntegrationFlow integrationOutboundFlow(ApplicationEventPublisher publisher) {
+		AbstractClientConnectionFactory factory = Tcp.nioClient(mAddress, mPort)
 				.serializer(TcpCodecs.crlf())
 				.deserializer(TcpCodecs.crlf())
-				.tcpSocketSupport((TcpSocketSupport) mSocketManager)
+				.tcpSocketSupport((TcpSocketSupport) socketManager())
 				.get();
 		factory.setApplicationEventPublisher(publisher);
-		return IntegrationFlows.from(Tcp.inboundGateway(factory))
+		return IntegrationFlows.from(Tcp.inboundGateway(factory).clientMode(true))
 //				.transform(Transformers.objectToString())
-//				.transform(m -> m)
-				.handle("createTcpDispatcher", "onReceive")
+				.handle("createTcpClientDispatcher", "onReceive")
 				.get();
 	}
 
@@ -86,32 +88,16 @@ public class TcpController {
 		return new MessagingTemplate();
 	}
 
-	public int send(String peerAddress, byte[] data) throws Exception {
-		return mSocketManager.send(peerAddress, data);
-	}
-
-	public List<String> getPeers() {
-		return mSocketManager.getPeers();
+	public int send(byte[] data) throws Exception {
+		return mSocketManager.send(data);
 	}
 
 	static class SocketManager extends DefaultTcpSocketSupport {
-		private final Map<String, TcpConnection> mSockets = new ConcurrentHashMap<>();
+		private TcpConnection mSocket = null;
 
-		public int send(String peerAddress, byte[] data) throws Exception {
-			TcpConnection conn = mSockets.get(peerAddress);
-			if (conn == null) {
-				return -1;
-			}
+		public int send(byte[] data) throws Exception {
 			ByteBuffer b = ByteBuffer.wrap(data);
-			return conn.getSocketInfo().getChannel().write(b);
-		}
-
-		public List<String> getPeers() {
-			List<String> peers = new ArrayList<String>();
-			for (String key : mSockets.keySet()) {
-				peers.add(key);
-			}
-			return peers;
+			return mSocket.getSocketInfo().getChannel().write(b);
 		}
 
 		@Override
@@ -124,45 +110,31 @@ public class TcpController {
 			TcpConnection conn = (TcpConnection) event.getSource();
 			String peer = conn.getSocketInfo().getRemoteSocketAddress().toString();
 			System.out.println("TcpConnectionOpenEvent: " + peer);
-			mSockets.put(peer, conn);
+			mSocket = conn;
 		}
 
 		@EventListener
 		public void handleTcpConnectionCloseEvent(TcpConnectionCloseEvent event) {
-			TcpConnection conn = (TcpConnection) event.getSource();
-			String peer = closeConnection(conn);
+			String peer = closeConnection();
 			System.out.println("TcpConnectionCloseEvent: " + peer);
 		}
 
 		@EventListener
 		public void handleTcpConnectionExceptionEvent(TcpConnectionExceptionEvent event) {
-			TcpConnection conn = (TcpConnection) event.getSource();
-			String peer = closeConnection(conn);
+			String peer = closeConnection();
 			System.out.println("TcpConnectionExceptionEvent: " + peer);
 		}
 
 		@EventListener
 		public void handleTcpConnectionFailedCorrelationEvent(TcpConnectionFailedCorrelationEvent event) {
-			TcpConnection conn = (TcpConnection) event.getSource();
-			String peer = closeConnection(conn);
+			String peer = closeConnection();
 			System.out.println("TcpConnectionFailedCorrelationEvent: " + peer);
 		}
 
-		@EventListener
-		public void handleTcpConnectionServerListeningEvent(TcpConnectionServerListeningEvent event) {
-		}
-
-		@EventListener
-		public void handleTcpConnectionServerExceptionEvent(TcpConnectionServerExceptionEvent event) {
-			TcpConnection conn = (TcpConnection) event.getSource();
-			String peer = closeConnection(conn);
-			System.out.println("TcpConnectionServerExceptionEvent: " + peer);
-		}
-
-		private String closeConnection(TcpConnection conn) {
-			String peer = conn.getSocketInfo().getRemoteSocketAddress().toString();
-			conn.close();
-			mSockets.remove(peer);
+		private String closeConnection() {
+			String peer = mSocket.getSocketInfo().getRemoteSocketAddress().toString();
+			mSocket.close();
+			mSocket = null;
 			return peer;
 		}
 	}

@@ -54,11 +54,6 @@ public class UdpController implements ApplicationContextAware {
 		if (mEventHandler == null) {
 			return;
 		}
-/*
-		mEventHandler.onUdpReceive((String)m.getHeaders().get("ip_address"),
-				(int)m.getHeaders().get("ip_port"), (byte[])m.getPayload(),
-				(long)m.getHeaders().get("timestamp"));
-*/
 		mEventHandler.onUdpReceive(m);
 
 	}

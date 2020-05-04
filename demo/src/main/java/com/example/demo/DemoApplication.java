@@ -26,6 +26,8 @@ import org.springframework.web.socket.WebSocketSession;
 import com.example.demo.js.JavaScript;
 import com.example.demo.json.Json;
 import com.example.demo.resource.ResourceController;
+import com.example.demo.tcp.client.TcpClientController;
+import com.example.demo.tcp.client.TcpClientEventHandler;
 import com.example.demo.tcp.server.TcpController;
 import com.example.demo.tcp.server.TcpEventHandler;
 import com.example.demo.thymeleaf.ThymeleafController;
@@ -50,8 +52,10 @@ import com.example.demo.websocket.server.WebSocketEventHandler;
 @SpringBootApplication
 @EnableScheduling
 public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
-		WebSocketClientHandler, MqttSubScribe, TcpEventHandler, UdpClientListener {
+		WebSocketClientHandler, MqttSubScribe, TcpEventHandler, UdpClientListener,
+		TcpClientEventHandler {
 	private TcpController mTcpController = null;
+	private TcpClientController mTcpClientController = null;
 	private WebSocketClientController mWsController = null;
 	private UdpController mUdpController = null;
 	private UdpClientController mUdpClientController = null;
@@ -104,6 +108,10 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 	public void context(ApplicationContext context) {
 		try {
 			mTcpController = context.getBean(TcpController.class);
+		} catch (Exception e) {
+		}
+		try {
+			mTcpClientController = context.getBean(TcpClientController.class);
 		} catch (Exception e) {
 		}
 		try {
@@ -209,7 +217,6 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 		}
 	}
 
-	@Profile("client")
 	@Scheduled(fixedRate = 1000)
 	public void push() {
 		try {
@@ -235,7 +242,12 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 		}
 		if (mMqtt != null) {
 		}
-
+		if (mTcpClientController != null) {
+			try {
+				mTcpClientController.send(("[tcp][client]hello " + String.valueOf((new Date()).getTime()) + "\r\n").getBytes());
+			} catch (Exception e) {
+			}
+		}
 	}
 
 	@Override
@@ -301,9 +313,16 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 				+ id + " / " + new String(data);
 		System.out.print(s + "\n");
 		try {
-			mTcpController.send(id, data);
+			mTcpController.send(id, ("[echo-back]" + (new String(data)) + "\r\n").getBytes());
 		} catch (Exception e1) {
 		}
+	}
+
+	@Override
+	public void onTcpClientReceive(byte[] data, long timestamp) {
+		String s = "[" + String.valueOf(timestamp) + "]"
+				+ new String(data);
+		System.out.print(s + "\n");
 	}
 
 	@Override
