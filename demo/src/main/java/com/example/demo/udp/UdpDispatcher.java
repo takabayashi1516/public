@@ -1,4 +1,4 @@
-package com.example.demo.udp.server;
+package com.example.demo.udp;
 
 import org.springframework.messaging.Message;
 

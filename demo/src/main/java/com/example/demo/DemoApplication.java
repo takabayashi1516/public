@@ -39,21 +39,22 @@ import com.example.demo.mysql.jdbc.SqlController;
 
 //import com.example.demo.pubsub.RedisMessagePublisher;
 
+import com.example.demo.udp.UdpController;
+import com.example.demo.udp.UdpEventHandler;
 import com.example.demo.udp.client.UdpClientController;
 import com.example.demo.udp.client.UdpClientListener;
-import com.example.demo.udp.server.UdpEventHandler;
-
 import com.example.demo.websocket.client.WebSocketClientController;
 import com.example.demo.websocket.client.WebSocketClientHandler;
 import com.example.demo.websocket.server.WebSocketEventHandler;
 
 @SpringBootApplication
 @EnableScheduling
-public class DemoApplication implements UdpEventHandler, UdpClientListener,
-		WebSocketEventHandler, WebSocketClientHandler, MqttSubScribe, TcpEventHandler {
+public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
+		WebSocketClientHandler, MqttSubScribe, TcpEventHandler, UdpClientListener {
 	private TcpController mTcpController = null;
 	private WebSocketClientController mWsController = null;
-	private UdpClientController mUdpController = null;
+	private UdpController mUdpController = null;
+	private UdpClientController mUdpClientController = null;
 	private Mqtt mMqtt = null;
 	private boolean mWsStatus = false;
 	private ResourceController mResourceController;
@@ -78,48 +79,11 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 			String s = (String) js.execute();
 			System.out.print(s);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 		} catch (ScriptException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		
-	}
-
-	@Override
-	public void onUdpReceive(String ip_address, int port, byte[] data, long timestamp) {
-		String s = "[" + String.valueOf(timestamp) + "]"
-				+ ip_address + ":" + String.valueOf(port) + "/" + new String(data);
-		System.out.print(s + "\n");
-		try {
-			Mqtt.getSingleton().publishMessage(MQTT_TOPIC_UDP_RX, data, 0, false);
-		} catch (MqttPersistenceException e) {
-			e.printStackTrace();
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@SuppressWarnings("rawtypes")
-	@Override
-	public void onUdpReceive(Message message) {
-		/*
-		message.getHeaders()
-		{
-			ip_packetAddress=127.0.0.1/127.0.0.1:63617,
-			ip_address=127.0.0.1,
-			id=03940627-7a8a-776f-ac24-7fd39f4ea19d,
-			ip_port=63617,
-			ip_hostname=127.0.0.1,
-			timestamp=1588293050172
-		}
-*/
-		String id = message.getHeaders().getId().toString();
-		System.out.println(message.getHeaders());
-//		System.out.println(message.getHeaders().get(IpHeaders.PACKET_ADDRESS));
-		Object payload = message.getPayload();
-		System.out.println(new String((byte[]) payload, Charset.defaultCharset()));
 	}
 
 	@Override
@@ -143,7 +107,11 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 		} catch (Exception e) {
 		}
 		try {
-			mUdpController = context.getBean(UdpClientController.class);
+			mUdpController = context.getBean(UdpController.class);
+		} catch (Exception e) {
+		}
+		try {
+			mUdpClientController = context.getBean(UdpClientController.class);
 		} catch (Exception e) {
 		}
 		try {
@@ -228,7 +196,7 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 			rc = mSqlController.insertRecord("table1", "(name, mail, age)", "(\"dddd\", \"dddd@gmail.com\", 30)");
 			System.out.printf("insertRecord rc=%d\n", rc);
 			List<Map<String, Object>> list = mSqlController.select("table1", null);
-			rc = mSqlController.updateRecord("table1", "name=\"Shigeru.Takabayashi\", upd=now()", "age = 35");
+			rc = mSqlController.updateRecord("table1", "name=\"aaaa\", upd=now()", "age = 35");
 			System.out.printf("updateRecord rc=%d\n", rc);
 			list = mSqlController.select("table1", null);
 			rc = mSqlController.deleteRecord("table1", "age = 35");
@@ -255,12 +223,15 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 		} catch (Exception e) {
 //			e.printStackTrace();
 		}
-		if (mUdpController != null) {
+		if (mUdpClientController != null) {
 			try {
-				System.out.println("udp send");
-				mUdpController.sendTo(("[udp]hello " + String.valueOf((new Date()).getTime())).getBytes());
+				mUdpClientController.sendTo(("[udp][client]hello " + String.valueOf((new Date()).getTime())).getBytes());
 			} catch (IOException e) {
+//				e.printStackTrace();
 			}
+		}
+		if (mUdpController != null) {
+			mUdpController.send(("[udp]hello " + String.valueOf((new Date()).getTime())).getBytes());
 		}
 		if (mMqtt != null) {
 		}
@@ -332,8 +303,56 @@ public class DemoApplication implements UdpEventHandler, UdpClientListener,
 		try {
 			mTcpController.send(id, data);
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+		}
+	}
+
+	@Override
+	public void onUdpReceive(Message<byte[]> message) {
+		/*
+		message.getHeaders()
+		{
+			ip_packetAddress=127.0.0.1/127.0.0.1:63617,
+			ip_address=127.0.0.1,
+			id=03940627-7a8a-776f-ac24-7fd39f4ea19d,
+			ip_port=63617,
+			ip_hostname=127.0.0.1,
+			timestamp=1588293050172
+		}
+*/
+		String id = message.getHeaders().getId().toString();
+//		System.out.println(message.getHeaders().get(IpHeaders.PACKET_ADDRESS));
+		Object payload = message.getPayload();
+		String data = new String((byte[]) payload, Charset.defaultCharset());
+		System.out.println("[UdpController]" + message.getHeaders() + ": " + data);
+		try {
+			Mqtt.getSingleton().publishMessage(MQTT_TOPIC_UDP_RX, (byte[]) payload, 0, false);
+		} catch (MqttPersistenceException e) {
+		} catch (MqttException e) {
+		}
+	}
+
+	@Override
+	public void onUdpClientReceive(Message message) {
+		/*
+		message.getHeaders()
+		{
+			ip_packetAddress=127.0.0.1/127.0.0.1:63617,
+			ip_address=127.0.0.1,
+			id=03940627-7a8a-776f-ac24-7fd39f4ea19d,
+			ip_port=63617,
+			ip_hostname=127.0.0.1,
+			timestamp=1588293050172
+		}
+*/
+		String id = message.getHeaders().getId().toString();
+//		System.out.println(message.getHeaders().get(IpHeaders.PACKET_ADDRESS));
+		Object payload = message.getPayload();
+		String data = new String((byte[]) payload, Charset.defaultCharset());
+		System.out.println("[UdpClientController]" + message.getHeaders() + ": " + data);
+		try {
+			Mqtt.getSingleton().publishMessage(MQTT_TOPIC_UDP_RX, (byte[]) payload, 0, false);
+		} catch (MqttPersistenceException e) {
+		} catch (MqttException e) {
 		}
 	}
 }
