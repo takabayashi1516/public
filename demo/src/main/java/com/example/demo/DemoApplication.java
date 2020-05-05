@@ -15,10 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.Message;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -54,6 +57,37 @@ import com.example.demo.websocket.server.WebSocketEventHandler;
 public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 		WebSocketClientHandler, MqttSubScribe, TcpEventHandler, UdpClientListener,
 		TcpClientEventHandler {
+
+	// --- hash sample ---
+	@Autowired
+	PasswordEncoder mEncoder;
+	@Bean
+	PasswordEncoder encoder() {
+		return new BCryptPasswordEncoder();
+	}
+	public String getHash(String target) {
+		return mEncoder.encode(target);
+	}
+	public boolean testHash(String target, String hash) {
+		return mEncoder.matches(target, hash);
+	}
+	void testHash() {
+		String t1 = "[1] test string " + String.valueOf((new Date()).getTime());
+		String t2 = "[2] test string " + String.valueOf((new Date()).getTime());
+		String h1 = getHash(t1);
+		String h2 = getHash(t2);
+		String h1_1 = getHash(t1);
+		System.out.println(h1);
+		System.out.println(testHash(t1, h1));
+		System.out.println(testHash(t2, h1));
+		System.out.println(testHash(t1, h1_1));
+		System.out.println(testHash(t2, h1_1));
+		System.out.println(h2);
+		System.out.println(testHash(t1, h2));
+		System.out.println(testHash(t2, h2));
+	}
+	// --- hash sample ---
+
 	private TcpController mTcpController = null;
 	private TcpClientController mTcpClientController = null;
 	private WebSocketClientController mWsController = null;
@@ -106,6 +140,7 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 
 	@Autowired
 	public void context(ApplicationContext context) {
+		testHash();
 		try {
 			mTcpController = context.getBean(TcpController.class);
 		} catch (Exception e) {

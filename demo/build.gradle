@@ -33,8 +33,9 @@ dependencies {
 	runtime('mysql:mysql-connector-java')
 
 	compile('org.springframework.boot:spring-boot-starter-jdbc')
-
 	compile group: 'org.javers', name: 'javers-spring-boot-starter-mongo', version: '3.7.6'
+
+	compile group: 'org.springframework.boot', name: 'spring-boot-starter-security'
 
 	compile 'org.springframework.boot:spring-boot-starter-data-redis'
 
