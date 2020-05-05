@@ -1,9 +1,11 @@
 package com.example.demo.thymeleaf;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.json.Json;
+import com.example.demo.mysql.jpa.HealthDataEntity;
 import com.example.demo.mysql.jpa.HealthViewEntity;
 import com.example.demo.mysql.jpa.MySqlHealth;
 import com.example.demo.mysql.jpa.MySqlHealthView;
@@ -187,6 +190,26 @@ public class ThymeleafController {
 		if (mMySqlPersonal.delete(Long.parseLong(id))) {
 			result = "success";
 		}
+		model.addAttribute("result", result);
+		return "result";
+	}
+
+	// $ curl -X POST http://${host_front}:${server.port}/update/${id}?v=${value}
+	@RequestMapping(value = "/update/{id}", method=RequestMethod.PUT)
+	public String modifyDate(
+			@PathVariable("id") String id,
+			@RequestParam(value = "v") long value,
+			Model model) {
+		String result = "success";
+/*
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+		TimeZone tz = TimeZone.getTimeZone("Asia/Tokyo");
+		long epoch_s = sdf.parse(date).getTime();
+		mMySqlHealth.getRange(person, ts_start, ts_end);
+*/
+		HealthDataEntity e = mMySqlHealth.get(Long.parseLong(id));
+		e.setTimeStamp(e.getTimeStamp() + value);
+		mMySqlHealth.update(e);
 		model.addAttribute("result", result);
 		return "result";
 	}

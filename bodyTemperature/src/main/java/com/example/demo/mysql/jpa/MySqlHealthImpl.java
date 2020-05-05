@@ -1,5 +1,7 @@
 package com.example.demo.mysql.jpa;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -23,5 +25,20 @@ public class MySqlHealthImpl implements MySqlHealth {
 		d.setTimeStamp(ts);
 		d.setTemperature(temperature);
 		return (mRepository.save(d) != null);
+	}
+
+	@Override
+	public List<HealthDataEntity> getRange(long person, long ts_start, long ts_end) {
+		return mRepository.get(person, ts_start, ts_end);
+	}
+
+	@Override
+	public void update(HealthDataEntity e) {
+		mRepository.save(e);
+	}
+
+	@Override
+	public HealthDataEntity get(long id) {
+		return mRepository.get(id);
 	}
 }

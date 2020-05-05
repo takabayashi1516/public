@@ -10,7 +10,8 @@ public class ScurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/chart/*", "/d3/*", "/regist/*", "/data/*", "/personal/*", "/personal/*/*", "/delete/*");
+		web.ignoring().antMatchers("/chart/*", "/d3/*", "/regist/*", "/data/*",
+				"/personal/*", "/personal/*/*", "/delete/*", "/update/*", "/update/*/*");
 	}
 
 	@Override
@@ -18,7 +19,7 @@ public class ScurityConfig extends WebSecurityConfigurerAdapter {
 		http
 			// AUTHORIZE
 			.authorizeRequests()
-			.mvcMatchers("/**", "/regist/*", "/personal/*", "/personal/*/*", "/delete/*").permitAll()
+			.mvcMatchers("/**", "/regist/*", "/personal/*", "/personal/*/*", "/delete/*", "/update/*", "/update/*/*").permitAll()
 			.anyRequest()
 			.authenticated()
 			.and()
