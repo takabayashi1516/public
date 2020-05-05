@@ -1,12 +1,6 @@
 package com.example.demo.mysql.jpa;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.Query;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -25,23 +19,22 @@ public class MySqlPersonalImpl implements MySqlPersonal {
 	}
 
 	@Override
-	public boolean update(String name, String mail) {
-		PersonalDataEntity d = mRepository.get(name);
+	public long update(String name, String mail) {
+		PersonalDataEntity d = mRepository.getByName(name);
 		if (d == null) {
 			d = new PersonalDataEntity();
+			d.setName(name);
 		}
-		d.setName(name);
 		d.setMail(mail);
-		return (mRepository.save(d) != null);
+		mRepository.save(d);
+		d = get(mail);
+		return d.getId();
 	}
 
 	@Override
-	public boolean delete(long id, String name) {
-		PersonalDataEntity d = mRepository.get(name);
+	public boolean delete(long id) {
+		PersonalDataEntity d = mRepository.get(id);
 		if (d == null) {
-			return false;
-		}
-		if (id != d.getId()) {
 			return false;
 		}
 		mRepository.delete(d);
@@ -49,18 +42,28 @@ public class MySqlPersonalImpl implements MySqlPersonal {
 	}
 
 	@Override
-	public ArrayList<PersonalDataEntity> getAll() {
+	public List<PersonalDataEntity> getAll() {
 		return mRepository.findAll();
 	}
 
 	@Override
 	public boolean isContain(long id) {
-		ArrayList<PersonalDataEntity> list =mRepository.findAll();
+		List<PersonalDataEntity> list =mRepository.findAll();
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).getId() == id) {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public PersonalDataEntity get(long id) {
+		return mRepository.get(id);
+	}
+
+	@Override
+	public PersonalDataEntity get(String mail) {
+		return mRepository.get(mail);
 	}
 }

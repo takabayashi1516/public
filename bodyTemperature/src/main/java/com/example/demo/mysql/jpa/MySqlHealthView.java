@@ -1,9 +1,9 @@
 package com.example.demo.mysql.jpa;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface MySqlHealthView {
-	public ArrayList<HealthViewEntity> getAll();
-	public ArrayList<HealthViewEntity> get(long person);
-	public ArrayList<HealthViewEntity> get(String name);
+	public List<HealthViewEntity> getAll();
+	public List<HealthViewEntity> get(long person);
+	public List<HealthViewEntity> get(String name);
 }

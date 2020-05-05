@@ -23,6 +23,7 @@ import com.example.demo.mysql.jpa.MySqlHealth;
 import com.example.demo.mysql.jpa.MySqlHealthView;
 import com.example.demo.mysql.jpa.MySqlPersonal;
 import com.example.demo.mysql.jpa.PersonalDataEntity;
+import com.example.demo.thymeleaf.ThymeleafController;
 
 @SpringBootApplication
 @EnableScheduling
@@ -39,11 +40,16 @@ public class BodyTemperatureApplication {
 	private MailSender mMailSender;
 	@Autowired
 	private MySqlHealthView mMysqlHealthView;
+	@Autowired
+	private ThymeleafController mThymeleafController;
 
 	@Value("${spring.mail.username}")
 	private String mMailUser;
 	@Value("${health_view}")
 	private String mHealthView;
+
+	@Value("${boot_broadcast}")
+	private boolean mIsBootBroadcast;
 
 //	@Autowired
 //	Environment mEnvironment;
@@ -73,7 +79,11 @@ public class BodyTemperatureApplication {
 //			e.printStackTrace();
 		}
 		System.out.println("update rc=" + rc);
-//		broadcastMail();
+
+		System.out.println("admin: " + mThymeleafController.getAdministratorHash());
+		if (mIsBootBroadcast) {
+			broadcastMail();
+		}
 	}
 
 	@Scheduled(cron = "0 30 8 * * *", zone = "Asia/Tokyo")
@@ -85,9 +95,10 @@ public class BodyTemperatureApplication {
 		mMysqlPersonal.getAll().forEach(e -> {
 			System.out.println("[" + String.valueOf(e.getId()) + "]"
 					+ e.getName() + ": " + e.getMail());
-			String msg = "http://" + mHost + ":" + mPort + "/personal?id=" + String.valueOf(e.getId()) + "\n";
+			String hash = mThymeleafController.getHash(e.getMail());
+			String msg = "http://" + mHost + ":" + mPort + "/personal?hash=" + hash + "\n";
 			msg += "confirm: ";
-			msg += "http://" + mHost + ":" + mPort + "/data?name=" + e.getName() + "\n";
+			msg += "http://" + mHost + ":" + mPort + "/data?hash=" + hash + "\n";
 			System.out.println(msg);
 			sendMail(e.getMail(), "request measure body temperature!", msg);
 		});

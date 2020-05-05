@@ -3,8 +3,13 @@ package com.example.demo.thymeleaf;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +22,7 @@ import com.example.demo.mysql.jpa.HealthViewEntity;
 import com.example.demo.mysql.jpa.MySqlHealth;
 import com.example.demo.mysql.jpa.MySqlHealthView;
 import com.example.demo.mysql.jpa.MySqlPersonal;
+import com.example.demo.mysql.jpa.PersonalDataEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
@@ -29,43 +35,106 @@ public class ThymeleafController {
 	@Autowired
 	private MySqlHealthView mMySqlHealthView;
 
-	@RequestMapping(value = "/", method=RequestMethod.GET)
-	public String getAllData(
-			Model model) {
-		ArrayList<HealthViewEntity> list = mMySqlHealthView.getAll();
-		return getReferenceHealthDataPage(list, model);
+	@Value("${admin_id}")
+	private long mAdminId;
+
+	@Autowired
+	PasswordEncoder mEncoder;
+
+	/**
+	 * 
+	 * @return
+	 */
+	@Bean
+	PasswordEncoder encoder() {
+		return new BCryptPasswordEncoder();
 	}
 
+	/**
+	 * 
+	 * @param target
+	 * @return
+	 */
+	public String getHash(String target) {
+		return mEncoder.encode(target);
+	}
+
+	/**
+	 * 
+	 * @param target
+	 * @param hash
+	 * @return
+	 */
+	public boolean testHash(String target, String hash) {
+		return mEncoder.matches(target, hash);
+	}
+
+	// $ curl http://${host_front}:${server.port}/control?hash=...
+	/**
+	 * 
+	 * @param hash
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/control", method=RequestMethod.GET)
+	public String getAllData(
+			@RequestParam(value = "hash") String hash,
+			Model model) {
+		return getReferenceHealthDataPage(hash, model, true);
+	}
+
+	// $ curl http://${host_front}:${server.port}/data?hash=...
+	/**
+	 * 
+	 * @param hash
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping(value = "/data", method=RequestMethod.GET)
 	public String getPersonalData(
-			@RequestParam(value = "name") String name,
-			Model model) {
-		ArrayList<HealthViewEntity> list = mMySqlHealthView.get(name);
-		return getReferenceHealthDataPage(list, model);
+			@RequestParam(value = "hash") String hash,
+			Model model) {	
+		return getReferenceHealthDataPage(hash, model, false);
 	}
 
+	// $ curl http://${host_front}:${server.port}/personal?hash=...
+	/**
+	 * 
+	 * @param hash
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping(value = "/personal", method=RequestMethod.GET)
 	public String getPersonalPage(
-			@RequestParam(value = "id") String id,
+			@RequestParam(value = "hash") String hash,
 			Model model) {
-		model.addAttribute("id", id);
+		model.addAttribute("hash", hash);
 		model.addAttribute("epoch", (new Date()).getTime());
 		return "save-bodyTemperature";
 	}
 
-	@RequestMapping(value = "/personal/{id}/{epoch}", method=RequestMethod.POST)
+	/**
+	 * 
+	 * @param data
+	 * @param epoch
+	 * @param hash
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/personal/{data}/{epoch}", method=RequestMethod.POST)
 	public String postPersonalData(
-			@PathVariable("id") String id,
+			@PathVariable("data") String data,
 			@PathVariable("epoch") String epoch,
-			@RequestParam(value = "data") String data,
+			@RequestParam(value = "hash") String hash,
 			Model model) {
-		String result = "Done!";
-		long personalId = Long.parseLong(id);
-		if (!mMySqlPersonal.isContain(personalId)) {
+		String result = "success";
+		PersonalDataEntity e = getPersonalDataFromHash(hash);
+		if (e == null) {
 			result = "fail (not exist)";
 			model.addAttribute("result", result);
 			return "result";
 		}
+		long personalId = e.getId();
 		if (!mMySqlHealth.append(personalId, Long.parseLong(epoch), Float.parseFloat(data))) {
 			result = "fail (database error)";
 		}
@@ -73,38 +142,116 @@ public class ThymeleafController {
 		return "result";
 	}
 
+	// $ curl -X POST http://${host_front}:${server.port}/regist/${name}?mail=${mail}
+	/**
+	 * 
+	 * @param name
+	 * @param mail
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping(value = "/regist/{name}", method=RequestMethod.POST)
 	public String registPersonal(
 			@PathVariable("name") String name,
 			@RequestParam(value = "mail") String mail,
 			Model model) {
-		String result = "Done!";
-		if (!mMySqlPersonal.update(name, mail)) {
-			result = "fail";
-		}
+		String result = ("success: " + getHash(mail));
+		result += (" id: " + mMySqlPersonal.update(name, mail));
 		model.addAttribute("result", result);
 		return "result";
 	}
 
+	// $ curl -X POST http://${host_front}:${server.port}/delete/${id}?hash=...
+	/**
+	 * 
+	 * @param id
+	 * @param name
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping(value = "/delete/{id}", method=RequestMethod.POST)
 	public String deletePersonal(
 			@PathVariable("id") String id,
-			@RequestParam(value = "name") String name,
+			@RequestParam(value = "hash") String hash,
 			Model model) {
-		String result = "Done!";
-		if (!mMySqlPersonal.delete(Long.parseLong(id), name)) {
-			result = "fail";
+		String result = "fail";
+		PersonalDataEntity e = getPersonalDataFromHash(hash);
+		if (e == null) {
+			model.addAttribute("result", result);
+			return "result";
+		}
+		if (e.getId() != Long.parseLong(id)) {
+			model.addAttribute("result", result);
+			return "result";
+		}
+		if (mMySqlPersonal.delete(Long.parseLong(id))) {
+			result = "success";
 		}
 		model.addAttribute("result", result);
 		return "result";
 	}
 
-	private String getReferenceHealthDataPage(ArrayList<HealthViewEntity> list, Model model) {
+	/**
+	 * 
+	 * @param hash
+	 * @return
+	 */
+	private boolean isAdministrator(String hash) {
+		PersonalDataEntity e = mMySqlPersonal.get(mAdminId);
+		return testHash(e.getMail(), hash);
+	}
+
+	public String getAdministratorHash() {
+		PersonalDataEntity e = mMySqlPersonal.get(mAdminId);
+		return getHash(e.getMail());
+	}
+
+	/**
+	 * 
+	 * @param hash
+	 * @return
+	 */
+	private PersonalDataEntity getPersonalDataFromHash(String hash) {
+		PersonalDataEntity rc = null;
+		List<PersonalDataEntity> list = mMySqlPersonal.getAll();
+		for (int i = 0; i < list.size(); i++) {
+			PersonalDataEntity e = list.get(i);
+			if (testHash(e.getMail(), hash)) {
+				rc = e;
+				break;
+			}
+		}
+		return rc;
+	}
+
+	/**
+	 * 
+	 * @param hash
+	 * @param model
+	 * @param ctrl
+	 * @return
+	 */
+	private String getReferenceHealthDataPage(String hash, Model model, boolean ctrl) {
 		Json json = new Json();
 		try {
 			json.load("[]");
+
+			List<HealthViewEntity> list = null;
+			if (ctrl) {
+				if (!isAdministrator(hash)) {
+					return "data";
+				}
+				list = mMySqlHealthView.getAll();
+			} else {
+				PersonalDataEntity p = getPersonalDataFromHash(hash);
+				list = mMySqlHealthView.get(p.getId());
+			}
+
 			for (int i = 0; i < list.size(); i++) {
 				HealthViewEntity e = list.get(i);
+//				if (!testHash(e.getMail(), hash)) {
+//					continue;
+//				}
 				Json nest = new Json();
 				nest.load("{}");
 				nest.set("id", e.getId());
@@ -115,10 +262,15 @@ public class ThymeleafController {
 				nest.set("temperature", e.getTemperature());
 				json.set(null, i, nest.get(null));
 			}
-			model.addAttribute("data", json.get(null).toString());
 		} catch (JsonMappingException e) {
 		} catch (JsonProcessingException e) {
 		} catch (IOException e) {
+		} finally {
+			try {
+				model.addAttribute("data", json.get(null).toString());
+			} catch (IOException e) {
+				model.addAttribute("data", "[]");
+			}
 		}
 		return "data";
 	}

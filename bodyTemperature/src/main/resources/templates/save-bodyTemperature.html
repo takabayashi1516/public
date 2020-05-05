@@ -4,7 +4,7 @@
   <title>store body temperature</title>
   <script th:inline="javascript">
   /*<![CDATA[*/
-  var id = /*[[${id}]]*/null;
+  var hash = /*[[${hash}]]*/null;
   var epoch = /*[[${epoch}]]*/null;
   /*]]>*/
   window.addEventListener("load", function () {
@@ -26,9 +26,9 @@
 
       try {
         var _bodyTemperature = fdt.get("bodyTemperature");
-        xhr.open("POST", "/personal/" + id + "/" + epoch + "?");
+        xhr.open("POST", "/personal/" + _bodyTemperature.toString() + "/" + epoch + "?");
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.send("data=" + _bodyTemperature.toString());
+        xhr.send("hash=" + hash);
       } catch (_err) {
         document.getElementById("result").innerHTML = _err + '<br>';
       }
