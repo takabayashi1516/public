@@ -88,7 +88,9 @@
     barChartData.names.some(function (_name, _idx, _arr) {
       var _data = barChartData.datasets[_idx].data;
       var _labels = barChartData.labels;
-      C_JSON.filter(function (__rec) { return (_name === __rec.name); }).some(function (_rec) {
+      C_JSON.filter(function (__rec) { return (_name === __rec.name);}).sort(function (_a, _b) {
+        return _a.timestamp - _b.timestamp;
+      }).some(function (_rec) {
         var _date = getDateString(_rec.timestamp);
         var _data_index = _labels.indexOf(_date);
         while (_data.length < _data_index) {
