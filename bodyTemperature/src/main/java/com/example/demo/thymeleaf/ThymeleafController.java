@@ -111,6 +111,10 @@ public class ThymeleafController {
 	public String getPersonalPage(
 			@RequestParam(value = "hash") String hash,
 			Model model) {
+		PersonalDataEntity e = getPersonalDataFromHash(hash);
+		if (e != null) {
+			model.addAttribute("name", e.getName());
+		}
 		model.addAttribute("hash", hash);
 		model.addAttribute("epoch", (new Date()).getTime());
 		return "save-bodyTemperature";

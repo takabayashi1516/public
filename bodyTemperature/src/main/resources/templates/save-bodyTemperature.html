@@ -4,6 +4,7 @@
   <title>store body temperature</title>
   <script th:inline="javascript">
   /*<![CDATA[*/
+  var name = /*[[${name}]]*/null;
   var hash = /*[[${hash}]]*/null;
   var epoch = /*[[${epoch}]]*/null;
   /*]]>*/
@@ -38,9 +39,11 @@
   </script>
 </head>
 <body>
+  <p th:text="${name}" />
+  <hr>
   <form id="selectForm" action="/" method="GET" enctype="multipart/form-data">
     <label for="bodyTemperature">body temperature:</label>
-    <input id="bodyTemperature" name="bodyTemperature" size="8" value="0.00"><br>
+    <input id="bodyTemperature" name="bodyTemperature" size="8" value="36.00"><br>
     <input type="submit">
   </form>
   <hr>
