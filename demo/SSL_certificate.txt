@@ -63,5 +63,7 @@ openssl pkcs12 -export -in client.crt -inkey client.key -out client.p12 -certfil
 #ボツ keytool -importkeystore -srckeystore client.p12 -srcstoretype PKCS12 -destkeystore client.keystore -deststoretype PKCS12
 keytool -importkeystore -srckeystore client.p12 -srcstoretype PKCS12 -srcstorepass ${p12_passwd} -alias cert -destkeystore client.keystore -deststorepass ${ks_out_passwd}
 
+keytool -import -trustcacerts -file ca.crt -keystore ca.keystore -alias ca
+
 *.p12 passwd: ${p12_passwd}
 *.keystore  : ${ks_out_passwd}

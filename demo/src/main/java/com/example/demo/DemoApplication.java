@@ -34,6 +34,10 @@ import com.example.demo.tcp.client.TcpClientEventHandler;
 import com.example.demo.tcp.server.TcpController;
 import com.example.demo.tcp.server.TcpEventHandler;
 import com.example.demo.thymeleaf.ThymeleafController;
+import com.example.demo.tls.client.TlsClientController;
+import com.example.demo.tls.client.TlsClientEventHandler;
+import com.example.demo.tls.server.TlsController;
+import com.example.demo.tls.server.TlsEventHandler;
 import com.example.demo.mqtt.config.Mqtt;
 import com.example.demo.mqtt.handler.MqttSubScribe;
 import com.example.demo.mqtt.model.MqttSubscribeModel;
@@ -56,7 +60,7 @@ import com.example.demo.websocket.server.WebSocketEventHandler;
 @EnableScheduling
 public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 		WebSocketClientHandler, MqttSubScribe, TcpEventHandler, UdpClientListener,
-		TcpClientEventHandler {
+		TcpClientEventHandler, TlsClientEventHandler, TlsEventHandler {
 
 	// --- hash sample ---
 	@Autowired
@@ -88,6 +92,8 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 	}
 	// --- hash sample ---
 
+	private TlsController mTlsController = null;
+	private TlsClientController mTlsClientController = null;
 	private TcpController mTcpController = null;
 	private TcpClientController mTcpClientController = null;
 	private WebSocketClientController mWsController = null;
@@ -141,6 +147,14 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 	@Autowired
 	public void context(ApplicationContext context) {
 		testHash();
+		try {
+			mTlsController = context.getBean(TlsController.class);
+		} catch (Exception e) {
+		}
+		try {
+			mTlsClientController = context.getBean(TlsClientController.class);
+		} catch (Exception e) {
+		}
 		try {
 			mTcpController = context.getBean(TcpController.class);
 		} catch (Exception e) {
@@ -283,6 +297,12 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 			} catch (Exception e) {
 			}
 		}
+		if (mTlsClientController != null) {
+			try {
+				mTlsClientController.send(("[tls][client]hello " + String.valueOf((new Date()).getTime()) + "\r\n").getBytes());
+			} catch (Exception e) {
+			}
+		}
 	}
 
 	@Override
@@ -407,6 +427,22 @@ public class DemoApplication implements UdpEventHandler, WebSocketEventHandler,
 			Mqtt.getSingleton().publishMessage(MQTT_TOPIC_UDP_RX, (byte[]) payload, 0, false);
 		} catch (MqttPersistenceException e) {
 		} catch (MqttException e) {
+		}
+	}
+	@Override
+	public void onTlsClientReceive(byte[] data, long timestamp) {
+		String s = "[" + String.valueOf(timestamp) + "]"
+				+ new String(data);
+		System.out.print(s + "\n");
+	}
+	@Override
+	public void onTlsReceive(String id, byte[] data, long timestamp) {
+		String s = "[" + String.valueOf(timestamp) + "]"
+				+ id + " / " + new String(data);
+		System.out.print(s + "\n");
+		try {
+			mTlsController.send(id, ("[echo-back]" + (new String(data)) + "\r\n").getBytes());
+		} catch (Exception e1) {
 		}
 	}
 }
