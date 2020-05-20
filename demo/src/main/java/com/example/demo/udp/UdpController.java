@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
-import org.springframework.integration.ip.dsl.Udp;
 import org.springframework.integration.ip.udp.UnicastReceivingChannelAdapter;
 import org.springframework.integration.ip.udp.UnicastSendingMessageHandler;
 import org.springframework.integration.support.MessageBuilder;
@@ -60,7 +59,6 @@ public class UdpController implements ApplicationContextAware {
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		// TODO Auto-generated method stub
 		mContext = applicationContext;
 		mEventHandler = mContext.getBean(UdpEventHandler.class);
 		mTxHandler = new UnicastSendingMessageHandler(mUdpRemoteHost, mUdpRemotePort);

@@ -88,7 +88,7 @@ public class TlsController implements TcpListener, ApplicationEventPublisher {
 	}
 
 	public void send(String id, byte[] data) throws Exception {
-		TcpConnection conn = mServer.getConnection();
+		TcpConnection conn = mSockets.get(id);
 		conn.send(new GenericMessage<byte[]>(data));
 	}
 
@@ -99,7 +99,7 @@ public class TlsController implements TcpListener, ApplicationEventPublisher {
 		}
 		if (event instanceof TcpConnectionOpenEvent) {
 			TcpConnection conn = (TcpConnection) ((TcpConnectionOpenEvent) event).getSource();
-			String id = conn.getSocketInfo().getRemoteSocketAddress().toString();
+			String id = conn.getSocketInfo().getInetAddress().getHostAddress();
 			id += ":";
 			id += String.valueOf(conn.getSocketInfo().getPort());
 			mSockets.put(id, conn);

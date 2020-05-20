@@ -25,11 +25,13 @@ import javax.websocket.Session;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.websocket.api.WebSocketConnectionListener;
+import org.eclipse.jetty.websocket.api.WebSocketListener;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 @ClientEndpoint
-public class WebSocketSecureClient extends WebSocketNonSecureClient implements WebSocketConnectionListener {
+public class WebSocketSecureClient extends WebSocketNonSecureClient
+		implements WebSocketConnectionListener, WebSocketListener {
 	private WebSocketClient mSocket = null;
 	private org.eclipse.jetty.websocket.api.Session mWsSession;
 
@@ -50,6 +52,7 @@ public class WebSocketSecureClient extends WebSocketNonSecureClient implements W
 			HttpClient http = new HttpClient(sslContextFactory);
 			mSocket = new WebSocketClient(http);
 			mSocket.start();
+//			mSocket.addSessionListener(this);
 		}
 
 		if (mWsSession == null) {
@@ -95,6 +98,11 @@ public class WebSocketSecureClient extends WebSocketNonSecureClient implements W
 	@OnMessage
 	public void onMessage(String message) {
 		mController.getHandler().onMessage(mController, message);
+	}
+
+	@OnMessage
+	public void onMessage(byte[] message) {
+		mController.getHandler().onMessage(mController, new String(message));
 	}
 
 	@OnError
@@ -180,5 +188,15 @@ public class WebSocketSecureClient extends WebSocketNonSecureClient implements W
 		mController.getHandler().onError(mController, cause);
 		mWsSession.close();
 		mWsSession = null;
+	}
+
+	@Override
+	public void onWebSocketBinary(byte[] payload, int offset, int len) {
+		mController.getHandler().onMessage(mController, new String(payload));
+	}
+
+	@Override
+	public void onWebSocketText(String message) {
+		mController.getHandler().onMessage(mController, message);
 	}
 }

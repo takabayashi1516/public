@@ -41,7 +41,7 @@ public class WebSocketDispacher implements WebSocketHandler {
 		send(mSessionList.get(id), data);
 	}
 
-	private void send(WebSocketSession session, byte[] data) throws IOException {
+	public void send(WebSocketSession session, byte[] data) throws IOException {
 		BinaryMessage message = new BinaryMessage(data);
 		if (session.isOpen()) {
 			session.sendMessage(message);

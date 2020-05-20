@@ -22,6 +22,8 @@ public class WebSocketClientController {
 	private String mWsAddress;
 	@Value("${ws_remote_port}")
 	private int mWsPort;
+	@Value("${ws_trust_cert:null}")
+	private String mTrustCa;
 
 	@Value("${ws_secure}")
 	private boolean mIsSecure;
@@ -56,7 +58,7 @@ public class WebSocketClientController {
 
 		if (mIsSecure) {
 			mWsClient = new WebSocketSecureClient(this);
-			mWsClient.setSecureSettingPath(null, null, "ca.crt");
+			mWsClient.setSecureSettingPath(null, null, mTrustCa);
 		} else {
 			mWsClient = new WebSocketNonSecureClient(this);
 		}

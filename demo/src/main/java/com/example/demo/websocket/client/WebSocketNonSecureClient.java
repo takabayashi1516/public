@@ -83,6 +83,11 @@ public class WebSocketNonSecureClient {
 		mController.getHandler().onMessage(mController, message);
 	}
 
+	@OnMessage
+	public void onMessage(byte[] message) {
+		mController.getHandler().onMessage(mController, new String(message));
+	}
+
 	@OnError
 	public void onError(Throwable th) {
 		mController.getHandler().onError(mController, th);
