@@ -117,6 +117,12 @@ public class ThymeleafController {
 		}
 		model.addAttribute("hash", hash);
 		model.addAttribute("epoch", (new Date()).getTime());
+		HealthDataEntity he = mMySqlHealth.getLatest(e.getId());
+		float temperature = 36f;
+		if (he != null) {
+			temperature = he.getTemperature();
+		}
+		model.addAttribute("temperature", String.format("%.1f", temperature));
 		return "save-bodyTemperature";
 	}
 

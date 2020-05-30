@@ -15,5 +15,7 @@ public interface MySqlHealthRepository extends JpaRepository<HealthDataEntity, L
 	@Query(value = "select * from health where personal_id = :person and timestamp >= :ts_start and timestamp <= :ts_end", nativeQuery = true)
 	List<HealthDataEntity> get(@Param("person") long person,
 			@Param("ts_start") long ts_start, @Param("ts_end") long ts_end);
+	@Query(value = "select * from health where personal_id = :person order by id desc limit :num", nativeQuery = true)
+	List<HealthDataEntity> getLatest(@Param("person") long person, @Param("num") int num);
 
 }

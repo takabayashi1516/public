@@ -96,6 +96,9 @@ public class BodyTemperatureApplication {
 			System.out.println("[" + String.valueOf(e.getId()) + "]"
 					+ e.getName() + ": " + e.getMail());
 			String hash = mThymeleafController.getHash(e.getMail());
+			while (hash.substring(hash.length() - 1).equals(".")) {
+				hash = mThymeleafController.getHash(e.getMail());
+			}
 			String msg = "http://" + mHost + ":" + mPort + "/personal?hash=" + hash + "\n";
 			msg += "confirm: ";
 			msg += "http://" + mHost + ":" + mPort + "/data?hash=" + hash + "\n";

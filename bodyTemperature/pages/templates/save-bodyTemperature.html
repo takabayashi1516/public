@@ -7,6 +7,7 @@
   var name = /*[[${name}]]*/null;
   var hash = /*[[${hash}]]*/null;
   var epoch = /*[[${epoch}]]*/null;
+  var temperature = /*[[${temperature}]]*/null;
   /*]]>*/
   window.addEventListener("load", function () {
     var slctFrm = document.getElementById("selectForm");
@@ -43,7 +44,7 @@
   <hr>
   <form id="selectForm" action="/" method="GET" enctype="multipart/form-data">
     <label for="bodyTemperature">body temperature:</label>
-    <input id="bodyTemperature" name="bodyTemperature" size="8" value="36.00"><br>
+    <input id="bodyTemperature" name="bodyTemperature" size="8" th:value="${temperature}"><br>
     <input type="submit">
   </form>
   <hr>

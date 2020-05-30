@@ -41,4 +41,18 @@ public class MySqlHealthImpl implements MySqlHealth {
 	public HealthDataEntity get(long id) {
 		return mRepository.get(id);
 	}
+
+	@Override
+	public List<HealthDataEntity> getLatest(long person, int num) {
+		return mRepository.getLatest(person, num);
+	}
+
+	@Override
+	public HealthDataEntity getLatest(long person) {
+		List<HealthDataEntity> list = mRepository.getLatest(person, 1);
+		if (list.isEmpty()) {
+			return null;
+		}
+		return list.get(0);
+	}
 }
