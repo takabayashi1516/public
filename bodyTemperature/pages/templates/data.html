@@ -6,7 +6,8 @@
   <script src='/chart/utils.js'></script>
   <script th:inline="javascript">
   /*<![CDATA[*/
-  const C_DATA = /*[[${data}]]*/null;
+  const C_DATA = /*[[${data}]]*/{};
+  const C_MAX = /*[[${max}]]*/40.0;
   /*]]>*/
   const C_JSON = JSON.parse(C_DATA);
   var barChartData = {
@@ -27,7 +28,7 @@
             type: 'linear',
             position: 'left',
             ticks: {
-              max: 40.00,
+              max: C_MAX,
               min: 35.00,
               stepSize: 1.00
             },

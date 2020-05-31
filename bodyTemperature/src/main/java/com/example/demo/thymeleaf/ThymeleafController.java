@@ -266,6 +266,7 @@ public class ThymeleafController {
 	 */
 	private String getReferenceHealthDataPage(String hash, Model model, boolean ctrl) {
 		Json json = new Json();
+		float max = 0f;
 		try {
 			json.load("[]");
 
@@ -285,6 +286,10 @@ public class ThymeleafController {
 //				if (!testHash(e.getMail(), hash)) {
 //					continue;
 //				}
+				float temp = e.getTemperature();
+				if (max < temp) {
+					max = temp;
+				}
 				Json nest = new Json();
 				nest.load("{}");
 				nest.set("id", e.getId());
@@ -292,14 +297,16 @@ public class ThymeleafController {
 				nest.set("name", e.getName());
 				nest.set("mail", e.getMail());
 				nest.set("timestamp", e.getTimeStamp());
-				nest.set("temperature", e.getTemperature());
+				nest.set("temperature", temp);
 				json.set(null, i, nest.get(null));
 			}
 		} catch (JsonMappingException e) {
 		} catch (JsonProcessingException e) {
 		} catch (IOException e) {
 		} finally {
+			max = (float) Math.ceil(max);
 			try {
+				model.addAttribute("max", max);
 				model.addAttribute("data", json.get(null).toString());
 			} catch (IOException e) {
 				model.addAttribute("data", "[]");
