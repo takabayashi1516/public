@@ -1,15 +1,14 @@
 package com.example.demo.thymeleaf;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.io.Writer;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -72,6 +71,34 @@ public class ThymeleafController {
 		return mEncoder.matches(target, hash);
 	}
 
+	@RequestMapping(value = "/report.csv", method = RequestMethod.GET, produces = "text/csv")
+	public void reportData(
+			@RequestParam(value = "hash") String hash,
+			Writer writer) throws IOException {
+		List<HealthViewEntity> list = null;
+		if (!isAdministrator(hash)) {
+			writer.write("permition denied.");
+			return;
+		}
+		list = mMySqlHealthView.getAll();
+		writer.write("id,name,mail,temperature,timestamp\r\n");
+		for (int i = 0; i < list.size(); i++) {
+			HealthViewEntity e = list.get(i);
+			String record = "";
+			record += String.valueOf(e.getId());
+			record += ",";
+			record += e.getName();
+			record += ",";
+			record += e.getMail();
+			record += ",";
+			record += String.valueOf(e.getTemperature());
+			record += ",";
+			record += String.valueOf(e.getTimeStamp());
+			record += "\r\n";
+			writer.write(record);
+		}
+	}
+
 	// $ curl http://${host_front}:${server.port}/control?hash=...
 	/**
 	 * 
@@ -79,7 +106,7 @@ public class ThymeleafController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/control", method=RequestMethod.GET)
+	@RequestMapping(value = "/control", method = RequestMethod.GET)
 	public String getAllData(
 			@RequestParam(value = "hash") String hash,
 			Model model) {
@@ -93,7 +120,7 @@ public class ThymeleafController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/data", method=RequestMethod.GET)
+	@RequestMapping(value = "/data", method = RequestMethod.GET)
 	public String getPersonalData(
 			@RequestParam(value = "hash") String hash,
 			Model model) {	
@@ -107,7 +134,7 @@ public class ThymeleafController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/personal", method=RequestMethod.GET)
+	@RequestMapping(value = "/personal", method = RequestMethod.GET)
 	public String getPersonalPage(
 			@RequestParam(value = "hash") String hash,
 			Model model) {
@@ -134,7 +161,7 @@ public class ThymeleafController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/personal/{data}/{epoch}", method=RequestMethod.POST)
+	@RequestMapping(value = "/personal/{data}/{epoch}", method = RequestMethod.POST)
 	public String postPersonalData(
 			@PathVariable("data") String data,
 			@PathVariable("epoch") String epoch,
@@ -163,7 +190,7 @@ public class ThymeleafController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/regist/{name}", method=RequestMethod.POST)
+	@RequestMapping(value = "/regist/{name}", method = RequestMethod.POST)
 	public String registPersonal(
 			@PathVariable("name") String name,
 			@RequestParam(value = "mail") String mail,
@@ -182,7 +209,7 @@ public class ThymeleafController {
 	 * @param model
 	 * @return
 	 */
-	@RequestMapping(value = "/delete/{id}", method=RequestMethod.POST)
+	@RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
 	public String deletePersonal(
 			@PathVariable("id") String id,
 			@RequestParam(value = "hash") String hash,
@@ -205,7 +232,7 @@ public class ThymeleafController {
 	}
 
 	// $ curl -X POST http://${host_front}:${server.port}/update/${id}?v=${value}
-	@RequestMapping(value = "/update/{id}", method=RequestMethod.PUT)
+	@RequestMapping(value = "/update/{id}", method = RequestMethod.PUT)
 	public String modifyDate(
 			@PathVariable("id") String id,
 			@RequestParam(value = "v") long value,
