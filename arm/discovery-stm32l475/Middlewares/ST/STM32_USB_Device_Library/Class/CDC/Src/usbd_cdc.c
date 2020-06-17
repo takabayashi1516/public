@@ -85,6 +85,7 @@
 #include "usbd_cdc.h"
 #include "usbd_ctlreq.h"
 
+#include <peripheral_interface.h>
 
 /** @addtogroup STM32_USB_DEVICE_LIBRARY
   * @{
@@ -718,6 +719,7 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
     else
     {
       hcdc->TxState = 0U;
+      Apl_CDC_TxCmpltCallback(pdev);
     }
     return USBD_OK;
   }

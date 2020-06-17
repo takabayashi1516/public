@@ -74,6 +74,7 @@
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "stm32f4xx.h"
 
 #ifndef __VFP_FP__
 	#error This port can only be used when the project options are configured to enable hardware floating point support.
@@ -496,6 +497,7 @@ void xPortSysTickHandler( void )
 	executes all interrupts must be unmasked.  There is therefore no need to
 	save and then restore the interrupt mask value as its value is already
 	known. */
+	HAL_IncTick();
 	portDISABLE_INTERRUPTS();
 	{
 		/* Increment the RTOS tick. */

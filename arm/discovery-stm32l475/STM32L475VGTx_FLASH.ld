@@ -36,7 +36,10 @@ ENTRY(Reset_Handler)
 _estack = 0x20018000;    /* end of RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
-_Min_Stack_Size = 0x400; /* required amount of stack */
+_Min_Stack_Size = 0x800; /* required amount of stack */
+
+PROVIDE ( _Heap_Begin = _end_noinit ) ;
+PROVIDE ( _Heap_Limit = _estack - _Min_Stack_Size ) ;
 
 /* Specify the memory areas */
 MEMORY
@@ -157,14 +160,24 @@ SECTIONS
     __bss_end__ = _ebss;
   } >RAM
 
+  .noinit (NOLOAD) : ALIGN(8)
+  {
+      _noinit = .;
+      
+      *(.noinit .noinit.*) 
+      
+       . = ALIGN(8) ;
+      _end_noinit = .;   
+  } > RAM
+
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = . + _Min_Heap_Size;
-    . = . + _Min_Stack_Size;
+    PROVIDE ( _end = _end_noinit );
+/*    . = . + _Min_Heap_Size; */
+/*    . = . + _Min_Stack_Size; */
     . = ALIGN(8);
   } >RAM
 

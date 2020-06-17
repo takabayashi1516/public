@@ -171,6 +171,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
+#include "peripheral_interface.h"
 
 /** @addtogroup STM32L4xx_HAL_Driver
   * @{
@@ -2196,10 +2197,14 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
         && ((cr1its & USART_CR1_RXNEIE) != RESET))
 #endif
     {
+#if 0
       if (huart->RxISR != NULL)
       {
         huart->RxISR(huart);
       }
+#else
+      Apl_UART_RxCallback(huart);
+#endif
       return;
     }
   }
@@ -2268,10 +2273,14 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
           && ((cr1its & USART_CR1_RXNEIE) != RESET))
 #endif
       {
+#if 0
         if (huart->RxISR != NULL)
         {
           huart->RxISR(huart);
         }
+#else
+        Apl_UART_RxCallback(huart);
+#endif
       }
 
       /* If Overrun error occurs, or if any error occurs in DMA mode reception,

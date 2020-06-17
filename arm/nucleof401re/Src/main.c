@@ -55,6 +55,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "main_task.h"
 
 /* USER CODE END Includes */
 
@@ -82,12 +83,21 @@ I2C_HandleTypeDef hi2c2;
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 SPI_HandleTypeDef hspi3;
+DMA_HandleTypeDef hdma_spi1_rx;
+DMA_HandleTypeDef hdma_spi1_tx;
+DMA_HandleTypeDef hdma_spi2_rx;
+DMA_HandleTypeDef hdma_spi2_tx;
+DMA_HandleTypeDef hdma_spi3_rx;
+DMA_HandleTypeDef hdma_spi3_tx;
 
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_usart1_tx;
+DMA_HandleTypeDef hdma_usart2_tx;
+DMA_HandleTypeDef hdma_usart6_tx;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
@@ -97,17 +107,20 @@ osThreadId defaultTaskHandle;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-void MX_USART1_UART_Init(void);
-void MX_USART6_UART_Init(void);
-void MX_I2C1_Init(void);
-void MX_USART2_UART_Init(void);
+static void MX_DMA_Init(void);
+#if 0
+static void MX_USART1_UART_Init(void);
+static void MX_USART6_UART_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
-void MX_SPI2_Init(void);
-void MX_SPI1_Init(void);
-void MX_SPI3_Init(void);
-void MX_I2C2_Init(void);
+static void MX_SPI2_Init(void);
+static void MX_SPI1_Init(void);
+static void MX_SPI3_Init(void);
+static void MX_I2C2_Init(void);
 static void MX_TIM3_Init(void);
 void StartDefaultTask(void const * argument);
+#endif
 
 /* USER CODE BEGIN PFP */
 
@@ -146,6 +159,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+
+#if 0
   MX_USART1_UART_Init();
   MX_USART6_UART_Init();
   MX_I2C1_Init();
@@ -188,7 +204,21 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
-  
+#else
+
+#if defined(TRACE)
+	extern char _Heap_Begin; // Defined by the linker.
+	extern char _Heap_Limit; // Defined by the linker.
+	extern void initialise_monitor_handles (void);
+
+	initialise_monitor_handles();
+	printf("System clock: %lu Hz: heapbgn=%p, heapend=%p\n",
+			HAL_RCC_GetHCLKFreq(), &_Heap_Begin, &_Heap_Limit);
+#endif /* TRACE */
+
+	startMain();
+
+#endif
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -214,7 +244,7 @@ void SystemClock_Config(void)
   /**Configure the main internal regulator output voltage 
   */
   __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
   /**Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
@@ -243,8 +273,12 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
+
+  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 }
 
+#if 0
 /**
   * @brief ADC1 Initialization Function
   * @param None
@@ -294,13 +328,15 @@ static void MX_ADC1_Init(void)
   /* USER CODE END ADC1_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief I2C1 Initialization Function
   * @param None
   * @retval None
   */
-void MX_I2C1_Init(void)
+static void MX_I2C1_Init(void)
 {
 
   /* USER CODE BEGIN I2C1_Init 0 */
@@ -328,13 +364,15 @@ void MX_I2C1_Init(void)
   /* USER CODE END I2C1_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief I2C2 Initialization Function
   * @param None
   * @retval None
   */
-void MX_I2C2_Init(void)
+static void MX_I2C2_Init(void)
 {
 
   /* USER CODE BEGIN I2C2_Init 0 */
@@ -362,13 +400,15 @@ void MX_I2C2_Init(void)
   /* USER CODE END I2C2_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief SPI1 Initialization Function
   * @param None
   * @retval None
   */
-void MX_SPI1_Init(void)
+static void MX_SPI1_Init(void)
 {
 
   /* USER CODE BEGIN SPI1_Init 0 */
@@ -385,7 +425,7 @@ void MX_SPI1_Init(void)
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -400,13 +440,15 @@ void MX_SPI1_Init(void)
   /* USER CODE END SPI1_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief SPI2 Initialization Function
   * @param None
   * @retval None
   */
-void MX_SPI2_Init(void)
+static void MX_SPI2_Init(void)
 {
 
   /* USER CODE BEGIN SPI2_Init 0 */
@@ -423,7 +465,7 @@ void MX_SPI2_Init(void)
   hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.NSS = SPI_NSS_HARD_OUTPUT;
   hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
@@ -438,13 +480,15 @@ void MX_SPI2_Init(void)
   /* USER CODE END SPI2_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief SPI3 Initialization Function
   * @param None
   * @retval None
   */
-void MX_SPI3_Init(void)
+static void MX_SPI3_Init(void)
 {
 
   /* USER CODE BEGIN SPI3_Init 0 */
@@ -461,7 +505,7 @@ void MX_SPI3_Init(void)
   hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.NSS = SPI_NSS_HARD_INPUT;
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -475,7 +519,9 @@ void MX_SPI3_Init(void)
   /* USER CODE END SPI3_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief TIM3 Initialization Function
   * @param None
@@ -541,13 +587,15 @@ static void MX_TIM3_Init(void)
   HAL_TIM_MspPostInit(&htim3);
 
 }
+#endif
 
+#if 0
 /**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-void MX_USART1_UART_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
@@ -574,13 +622,15 @@ void MX_USART1_UART_Init(void)
   /* USER CODE END USART1_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-void MX_USART2_UART_Init(void)
+static void MX_USART2_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
@@ -607,13 +657,15 @@ void MX_USART2_UART_Init(void)
   /* USER CODE END USART2_Init 2 */
 
 }
+#endif
 
+#if 0
 /**
   * @brief USART6 Initialization Function
   * @param None
   * @retval None
   */
-void MX_USART6_UART_Init(void)
+static void MX_USART6_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART6_Init 0 */
@@ -640,6 +692,47 @@ void MX_USART6_UART_Init(void)
   /* USER CODE END USART6_Init 2 */
 
 }
+#endif
+
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
+  /* DMA1_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
+  /* DMA1_Stream4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream4_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream4_IRQn);
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
+  /* DMA1_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA2_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
+  /* DMA2_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
+  /* DMA2_Stream7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
+
+}
 
 /**
   * @brief GPIO Initialization Function
@@ -648,14 +741,43 @@ void MX_USART6_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PC0, PC13, PC14, PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC0, PC13, PC14, PC15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14 | GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB1, PB2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+//  HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+//  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+//  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
+//  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
+#if 0
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
@@ -680,6 +802,7 @@ void StartDefaultTask(void const * argument)
   }
   /* USER CODE END 5 */ 
 }
+#endif
 
 /**
   * @brief  This function is executed in case of error occurrence.
@@ -707,7 +830,12 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
+  printf("assert failed: \"%s\": l(%lu)\n", file, line);
+  wrap_abort();
 }
 #endif /* USE_FULL_ASSERT */
 
+void _init(void)
+{
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

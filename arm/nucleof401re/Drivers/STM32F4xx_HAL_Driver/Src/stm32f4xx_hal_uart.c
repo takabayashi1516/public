@@ -153,6 +153,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
+#include "peripheral_interface.h"
 
 /** @addtogroup STM32F4xx_HAL_Driver
   * @{
@@ -2369,6 +2370,7 @@ static HAL_StatusTypeDef UART_EndTransmit_IT(UART_HandleTypeDef *huart)
   */
 static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
 {
+#if 0
   uint16_t* tmp;
   
   /* Check that a Rx process is ongoing */
@@ -2421,6 +2423,10 @@ static HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
   {
     return HAL_BUSY;
   }
+#else
+	Apl_UART_RxCallback(huart);
+    return HAL_OK;
+#endif
 }
 
 /**
