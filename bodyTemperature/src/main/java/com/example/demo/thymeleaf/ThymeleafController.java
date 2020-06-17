@@ -2,13 +2,19 @@ package com.example.demo.thymeleaf;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -17,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriUtils;
 
 import com.example.demo.json.Json;
 import com.example.demo.mysql.jpa.HealthDataEntity;
@@ -71,8 +78,8 @@ public class ThymeleafController {
 		return mEncoder.matches(target, hash);
 	}
 
-	@RequestMapping(value = "/report.csv", method = RequestMethod.GET, produces = "text/csv")
-	public void reportData(
+	@RequestMapping(value = "/_report.csv", method = RequestMethod.GET, produces = "text/csv")
+	public void _reportData(
 			@RequestParam(value = "hash") String hash,
 			Writer writer) throws IOException {
 		List<HealthViewEntity> list = null;
@@ -97,6 +104,42 @@ public class ThymeleafController {
 			record += "\r\n";
 			writer.write(record);
 		}
+	}
+
+	@RequestMapping(value = "/report/{csv}.csv", method = RequestMethod.GET, produces = "text/csv")
+	public ResponseEntity<byte[]> reportData(
+			@RequestParam(value = "hash") String hash,
+			@PathVariable("csv") String csv) throws IOException {
+		String csv_file = csv + ".csv";
+		HttpHeaders headers = new HttpHeaders();
+		String headerValue = String.format("attachment; filename=\"%s\"; filename*=UTF-8''%s",
+				csv_file, UriUtils.encode(csv_file, StandardCharsets.UTF_8.name()));
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+		if (!isAdministrator(hash)) {
+			return new ResponseEntity<>("".getBytes("MS932"), headers, HttpStatus.METHOD_NOT_ALLOWED);
+		}
+		List<HealthViewEntity> list = null;
+		list = mMySqlHealthView.getAll();
+		String record = "id,name,mail,temperature,timestamp,date,time\r\n";
+		for (int i = 0; i < list.size(); i++) {
+			HealthViewEntity e = list.get(i);
+			record += String.valueOf(e.getId());
+			record += ",";
+			record += e.getName();
+			record += ",";
+			record += e.getMail();
+			record += ",";
+			record += String.valueOf(e.getTemperature());
+			record += ",";
+			record += String.valueOf(e.getTimeStamp());
+			record += ",";
+			Date d = (new Date(e.getTimeStamp()));
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy'/'MM'/'dd','kk':'mm':'ss");
+			sdf.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
+			record += sdf.format(d);
+			record += "\r\n";
+		}
+		return new ResponseEntity<>(record.getBytes("MS932"), headers, HttpStatus.OK);
 	}
 
 	// $ curl http://${host_front}:${server.port}/control?hash=...
