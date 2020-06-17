@@ -1,0 +1,43 @@
+PROGRAM = ../libtls.so
+
+OBJS  = lib-event.o
+OBJS += lib-tls.o
+OBJS += lib-timer.o
+
+CXX = g++
+
+VPATH = ../source: ../include
+
+CFLAGS  = -Wall
+CFLAGS += -Wno-deprecated-declarations
+CFLAGS += -shared
+CFLAGS += -O3
+CFLAGS += -fPIC
+CFLAGS += -fpermissive
+CFLAGS += -I../include/
+CFLAGS += -D__OPENSSL_CAPSULE
+CFLAGS += -D__USE_SYSCALL_EPOLL
+CFLAGS += -DLOGLEVEL=0
+
+LIBS    = -lssl
+LIBS   += -lcrypto
+
+HEADER  = lib-event.h
+HEADER += lib-tls.h
+HEADER += lib-timer.h
+
+.SUFFIXES: .cpp .o
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJS)
+	$(CXX) -o $(PROGRAM) $^ $(LIBS) $(CFLAGS)
+
+.cpp.o:
+	$(CXX) $(CFLAGS) -c $<
+
+.PHONY: clean
+clean:
+	$(RM) $(PROGRAM) $(OBJS)
+
+$(OBJS): $(HEADER)

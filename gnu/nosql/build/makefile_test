@@ -1,0 +1,32 @@
+PROGRAM = ../_test
+OBJS = test.o
+MAP = $(PROGRAM).map
+
+CXX = g++
+
+VPATH = ../test
+
+CFLAGS  = -Wall
+CFLAGS += -O3
+CFLAGS += -I/usr/local/include/libmongoc-1.0/
+CFLAGS += -I/usr/local/include/libbson-1.0/
+CFLAGS += -I../include
+
+LIBS    = -L..
+LIBS   += -lmongo_util
+
+OPT     = -Wl,-Map=$(MAP)
+
+.SUFFIXES: .cpp .o
+
+all: $(PROGRAM)
+
+$(PROGRAM): $(OBJS)
+	$(CXX) -o $(PROGRAM) $(OPT) $^ $(LIBS)
+
+.cpp.o:
+	$(CXX) $(CFLAGS) -c $<
+
+.PHONY: clean
+clean:
+	$(RM) $(PROGRAM) $(OBJS) $(MAP)

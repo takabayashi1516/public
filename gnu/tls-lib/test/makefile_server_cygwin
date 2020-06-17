@@ -1,0 +1,28 @@
+PROGRAM = test-server.exe
+OBJS = test-server.o
+MAP = $(PROGRAM).map
+
+CXX = g++
+
+CFLAGS  = -Wall
+CFLAGS += -O3
+CFLAGS += -I../include/
+CFLAGS += -DTEST_TLS_1_2
+
+#LIBS    = -L../
+#LIBS   += -ltls
+LIBS    = ../libtls.so
+
+OPT     = -Wl,-Map=$(MAP)
+
+.SUFFIXES: .cpp .o
+
+$(PROGRAM): $(OBJS)
+	$(CXX) -o $(PROGRAM) $(OPT) $^ $(LIBS)
+
+.cpp.o:
+	$(CXX) $(CFLAGS) -c $<
+
+.PHONY: clean
+clean:
+	$(RM) $(PROGRAM) $(OBJS) $(MAP)

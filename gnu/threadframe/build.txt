@@ -1,0 +1,42 @@
+
+
+
+# g++ -c threadframe.cpp -std=c++11 -DDEBUG_DUMP -D__USE_SYSCALL
+### cygwin ###
+g++ -c threadframe.cpp -std=c++11 -DDEBUG_DUMP
+ar rv threadframe.a threadframe.o
+ranlib threadframe.a
+
+gcc -c test.c
+gcc -o test_c test.c threadframe.a -lstdc++ -lpthread
+
+g++ -c test.cpp
+# g++ -o test_cpp test.cpp threadframe.a -lpthread -D__USE_SYSCALL
+### cygwin ###
+g++ -o test_cpp test.cpp threadframe.a -lpthread
+
+
+gcc -c test-hdr.c
+gcc -o test-hdr_c test-hdr.c threadframe.a -lstdc++ -lpthread
+
+g++ -c test-hdr.cpp
+# g++ -o test-hdr_cpp test-hdr.cpp threadframe.a -lpthread -D__USE_SYSCALL
+### cygwin ###
+g++ -o test-hdr_cpp test-hdr.cpp threadframe.a -lpthread
+
+
+
+
+
+g++ -shared -fPIC -o libthreadframe.so threadframe.cpp -std=c++11 -lpthread -DDEBUG_DUMP -D__USE_SYSCALL
+g++ -I./ -L./ -o test_cpp test.cpp -lthreadframe -D__USE_SYSCALL
+gcc -I./ -L./ -o test_c test.c -lthreadframe
+
+g++ -I./ -L./ -o test-hdr_cpp test-hdr.cpp -lthreadframe -D__USE_SYSCALL
+gcc -I./ -L./ -o test-hdr_c test-hdr.c -lthreadframe
+
+
+export LD_LIBRARY_PATH=.
+
+
+
