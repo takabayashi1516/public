@@ -1,0 +1,11 @@
+#
+# device for demo subsystem configuration
+#
+
+config DEMO_DEV
+	tristate "device for demo support"
+	depends on I2C
+	default m
+	select RT_MUTEXES
+	---help---
+	  bme280/pwm(bcm2837)/sc1602bs

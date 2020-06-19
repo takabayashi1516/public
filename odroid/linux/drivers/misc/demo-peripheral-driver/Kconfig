@@ -1,0 +1,11 @@
+#
+# device for demo subsystem for peripheral device configuration
+#
+
+config DEMO_PERIPHERAL_DEV
+	tristate "device for demo support"
+	depends on SPI
+	default m
+	select RT_MUTEXES
+	---help---
+	  bme280/pwm(bcm2837)/sc1602bs
