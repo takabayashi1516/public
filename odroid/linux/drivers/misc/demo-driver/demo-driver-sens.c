@@ -201,7 +201,7 @@ static ssize_t	demo_dev_driver_read(struct file *filp, char __user *buf,
 }
 
 /* -------------------------------------------------------------------------- */
-MODULE_AUTHOR("dts-insight");
+MODULE_AUTHOR("hoge");
 MODULE_DESCRIPTION("device driver for demo.");
 MODULE_LICENSE("GPL v2");
 

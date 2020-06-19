@@ -497,6 +497,6 @@ static struct spi_driver demo_peripheral_dev_driver = {
 
 module_spi_driver(demo_peripheral_dev_driver);
 
-MODULE_AUTHOR("dts-insight");
+MODULE_AUTHOR("hoge");
 MODULE_DESCRIPTION("peripheral device driver for demo.");
 MODULE_LICENSE("GPL v2");
