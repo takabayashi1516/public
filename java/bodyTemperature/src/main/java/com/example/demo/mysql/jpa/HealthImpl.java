@@ -4,14 +4,15 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
-public class MySqlHealthImpl implements MySqlHealth {
+public class HealthImpl implements Health {
 	@Autowired
-	private MySqlHealthRepository mRepository;
+	private HealthRepository mRepository;
 
-	public MySqlHealthImpl() {
+	public HealthImpl() {
 	}
 
 	@Autowired
@@ -29,7 +30,10 @@ public class MySqlHealthImpl implements MySqlHealth {
 
 	@Override
 	public List<HealthDataEntity> getRange(long person, long ts_start, long ts_end) {
-		return mRepository.get(person, ts_start, ts_end);
+		return mRepository.findAll(Specification.where(
+				HealthSpec.fieldsEquals("mPersonalId", person).and(
+						HealthSpec.fieldNumberGreaterThanOrEquals("mTimeStamp", ts_start).and(
+								HealthSpec.fieldNumberLessThans("mTimeStamp", ts_end)))));
 	}
 
 	@Override
@@ -39,7 +43,12 @@ public class MySqlHealthImpl implements MySqlHealth {
 
 	@Override
 	public HealthDataEntity get(long id) {
-		return mRepository.get(id);
+		List<HealthDataEntity> list = mRepository.findAll(Specification.where(
+				HealthSpec.fieldsEquals("mId", id)));
+		if (list.isEmpty()) {
+			return null;
+		}
+		return list.get(0);
 	}
 
 	@Override
@@ -54,5 +63,10 @@ public class MySqlHealthImpl implements MySqlHealth {
 			return null;
 		}
 		return list.get(0);
+	}
+
+	@Override
+	public HealthRepository getRepository() {
+		return mRepository;
 	}
 }

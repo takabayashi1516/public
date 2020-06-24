@@ -3,14 +3,11 @@
  */
 package com.example.demo;
 
-import java.util.ArrayList;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,28 +15,19 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.example.demo.mysql.jdbc.SqlController;
-import com.example.demo.mysql.jpa.HealthViewEntity;
-import com.example.demo.mysql.jpa.MySqlHealth;
-import com.example.demo.mysql.jpa.MySqlHealthView;
-import com.example.demo.mysql.jpa.MySqlPersonal;
-import com.example.demo.mysql.jpa.PersonalDataEntity;
+import com.example.demo.mysql.jpa.Personal;
 import com.example.demo.thymeleaf.ThymeleafController;
 
 @SpringBootApplication
 @EnableScheduling
 public class BodyTemperatureApplication {
-	private static final String PERSONAL_TABLE = "personal"; 
 
 	@Autowired
 	private SqlController mSqlController;
 	@Autowired
-	private MySqlHealth mMysqlHealth;
-	@Autowired
-	private MySqlPersonal mMysqlPersonal;
+	private Personal mPersonal;
 	@Autowired
 	private MailSender mMailSender;
-	@Autowired
-	private MySqlHealthView mMysqlHealthView;
 	@Autowired
 	private ThymeleafController mThymeleafController;
 
@@ -81,18 +69,16 @@ public class BodyTemperatureApplication {
 		System.out.println("update rc=" + rc);
 
 		System.out.println("admin: " + mThymeleafController.getAdministratorHash());
-		if (mIsBootBroadcast) {
-			broadcastMail();
-		}
+		broadcastMail(mIsBootBroadcast);
 	}
 
 	@Scheduled(cron = "0 30 8 * * *", zone = "Asia/Tokyo")
 	public void doBroadcastRequest() {
-		broadcastMail();
+		broadcastMail(true);
 	}
 
-	private void broadcastMail() {
-		mMysqlPersonal.getAll().forEach(e -> {
+	private void broadcastMail(boolean action) {
+		mPersonal.getRepository().findAll().forEach(e -> {
 			System.out.println("[" + String.valueOf(e.getId()) + "]"
 					+ e.getName() + ": " + e.getMail());
 			String hash = mThymeleafController.getHash(e.getMail());
@@ -103,7 +89,9 @@ public class BodyTemperatureApplication {
 			msg += "confirm: ";
 			msg += "http://" + mHost + ":" + mPort + "/data?hash=" + hash + "\n";
 			System.out.println(msg);
-			sendMail(e.getMail(), "request measure body temperature!", msg);
+			if (action) {
+				sendMail(e.getMail(), "request measure body temperature!", msg);
+			}
 		});
 	}
 

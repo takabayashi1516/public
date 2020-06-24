@@ -11,9 +11,9 @@ import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,9 +28,10 @@ import org.springframework.web.util.UriUtils;
 import com.example.demo.json.Json;
 import com.example.demo.mysql.jpa.HealthDataEntity;
 import com.example.demo.mysql.jpa.HealthViewEntity;
-import com.example.demo.mysql.jpa.MySqlHealth;
-import com.example.demo.mysql.jpa.MySqlHealthView;
-import com.example.demo.mysql.jpa.MySqlPersonal;
+import com.example.demo.mysql.jpa.HealthViewSpec;
+import com.example.demo.mysql.jpa.Health;
+import com.example.demo.mysql.jpa.HealthView;
+import com.example.demo.mysql.jpa.Personal;
 import com.example.demo.mysql.jpa.PersonalDataEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -38,11 +39,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 @Controller
 public class ThymeleafController {
 	@Autowired
-	private MySqlHealth mMySqlHealth;
+	private Health mHealth;
 	@Autowired
-	private MySqlPersonal mMySqlPersonal;
+	private Personal mPersonal;
 	@Autowired
-	private MySqlHealthView mMySqlHealthView;
+	private HealthView mHealthView;
 
 	@Value("${admin_id}")
 	private long mAdminId;
@@ -87,7 +88,7 @@ public class ThymeleafController {
 			writer.write("permition denied.");
 			return;
 		}
-		list = mMySqlHealthView.getAll();
+		list = mHealthView.getRepository().findAll();
 		writer.write("id,name,mail,temperature,timestamp\r\n");
 		for (int i = 0; i < list.size(); i++) {
 			HealthViewEntity e = list.get(i);
@@ -115,11 +116,14 @@ public class ThymeleafController {
 		String headerValue = String.format("attachment; filename=\"%s\"; filename*=UTF-8''%s",
 				csv_file, UriUtils.encode(csv_file, StandardCharsets.UTF_8.name()));
 		headers.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
-		if (!isAdministrator(hash)) {
-			return new ResponseEntity<>("".getBytes("MS932"), headers, HttpStatus.METHOD_NOT_ALLOWED);
-		}
+
 		List<HealthViewEntity> list = null;
-		list = mMySqlHealthView.getAll();
+		if (!isAdministrator(hash)) {
+			list = mHealthView.getRepository().findAll(Specification.where(
+					HealthViewSpec.fieldsEquals("mPerson", getPersonalDataFromHash(hash).getId())));
+		} else {
+			list = mHealthView.getRepository().findAll();
+		}
 		String record = "id,name,mail,temperature,timestamp,date,time\r\n";
 		for (int i = 0; i < list.size(); i++) {
 			HealthViewEntity e = list.get(i);
@@ -187,7 +191,7 @@ public class ThymeleafController {
 		}
 		model.addAttribute("hash", hash);
 		model.addAttribute("epoch", (new Date()).getTime());
-		HealthDataEntity he = mMySqlHealth.getLatest(e.getId());
+		HealthDataEntity he = mHealth.getLatest(e.getId());
 		float temperature = 36f;
 		if (he != null) {
 			temperature = he.getTemperature();
@@ -218,7 +222,7 @@ public class ThymeleafController {
 			return "result";
 		}
 		long personalId = e.getId();
-		if (!mMySqlHealth.append(personalId, Long.parseLong(epoch), Float.parseFloat(data))) {
+		if (!mHealth.append(personalId, Long.parseLong(epoch), Float.parseFloat(data))) {
 			result = "fail (database error)";
 		}
 		model.addAttribute("result", result);
@@ -239,7 +243,7 @@ public class ThymeleafController {
 			@RequestParam(value = "mail") String mail,
 			Model model) {
 		String result = ("success: " + getHash(mail));
-		result += (" id: " + mMySqlPersonal.update(name, mail));
+		result += (" id: " + mPersonal.update(name, mail));
 		model.addAttribute("result", result);
 		return "result";
 	}
@@ -267,7 +271,7 @@ public class ThymeleafController {
 			model.addAttribute("result", result);
 			return "result";
 		}
-		if (mMySqlPersonal.delete(Long.parseLong(id))) {
+		if (mPersonal.delete(Long.parseLong(id))) {
 			result = "success";
 		}
 		model.addAttribute("result", result);
@@ -285,11 +289,11 @@ public class ThymeleafController {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 		TimeZone tz = TimeZone.getTimeZone("Asia/Tokyo");
 		long epoch_s = sdf.parse(date).getTime();
-		mMySqlHealth.getRange(person, ts_start, ts_end);
+		mHealth.getRange(person, ts_start, ts_end);
 */
-		HealthDataEntity e = mMySqlHealth.get(Long.parseLong(id));
+		HealthDataEntity e = mHealth.get(Long.parseLong(id));
 		e.setTimeStamp(e.getTimeStamp() + value);
-		mMySqlHealth.update(e);
+		mHealth.update(e);
 		model.addAttribute("result", result);
 		return "result";
 	}
@@ -300,12 +304,12 @@ public class ThymeleafController {
 	 * @return
 	 */
 	private boolean isAdministrator(String hash) {
-		PersonalDataEntity e = mMySqlPersonal.get(mAdminId);
+		PersonalDataEntity e = mPersonal.get(mAdminId);
 		return testHash(e.getMail(), hash);
 	}
 
 	public String getAdministratorHash() {
-		PersonalDataEntity e = mMySqlPersonal.get(mAdminId);
+		PersonalDataEntity e = mPersonal.get(mAdminId);
 		return getHash(e.getMail());
 	}
 
@@ -316,7 +320,7 @@ public class ThymeleafController {
 	 */
 	private PersonalDataEntity getPersonalDataFromHash(String hash) {
 		PersonalDataEntity rc = null;
-		List<PersonalDataEntity> list = mMySqlPersonal.getAll();
+		List<PersonalDataEntity> list = mPersonal.getRepository().findAll();
 		for (int i = 0; i < list.size(); i++) {
 			PersonalDataEntity e = list.get(i);
 			if (testHash(e.getMail(), hash)) {
@@ -345,10 +349,11 @@ public class ThymeleafController {
 				if (!isAdministrator(hash)) {
 					return "data";
 				}
-				list = mMySqlHealthView.getAll();
+				list = mHealthView.getRepository().findAll();
 			} else {
-				PersonalDataEntity p = getPersonalDataFromHash(hash);
-				list = mMySqlHealthView.get(p.getId());
+				PersonalDataEntity e = getPersonalDataFromHash(hash);
+				list = mHealthView.getRepository().findAll(Specification.where(
+						HealthViewSpec.fieldsEquals("mPerson", e.getId())));
 			}
 
 			for (int i = 0; i < list.size(); i++) {
