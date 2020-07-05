@@ -21,16 +21,30 @@ public class PersonalImpl implements Personal {
 
 	@Override
 	public long update(String name, String mail) {
+		PersonalDataEntity d = null;
 		List<PersonalDataEntity> list = mRepository.findAll(Specification.where(
-				PersonalSpec.fieldsEquals("mName", name)));
-		if (list.isEmpty()) {
+				PersonalSpec.fieldsEquals("mMail", mail)));
+		if (!list.isEmpty()) {
+			// if e-mail duplicate
+			d = list.get(0);
+			if (d.getName().equals(name)) {
+				return -1;
+			}
+			d.setName(name);
+			mRepository.save(d);
+			d = get(mail);
+			return d.getId();
+		}
+
+		list = mRepository.findAll(Specification.where(
+				PersonalSpec.fieldsEquals("mName", name).and(
+						PersonalSpec.fieldsEquals("mMail", mail))));
+		if (!list.isEmpty()) {
+			// impossible case
 			return -1;
 		}
-		PersonalDataEntity d = list.get(0);
-		if (d == null) {
-			d = new PersonalDataEntity();
-			d.setName(name);
-		}
+		d = new PersonalDataEntity();
+		d.setName(name);
 		d.setMail(mail);
 		mRepository.save(d);
 		d = get(mail);

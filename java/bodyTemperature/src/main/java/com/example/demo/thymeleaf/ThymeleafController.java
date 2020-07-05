@@ -1,9 +1,14 @@
 package com.example.demo.thymeleaf;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -19,10 +24,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriUtils;
 
 import com.example.demo.json.Json;
@@ -33,6 +41,7 @@ import com.example.demo.mysql.jpa.Health;
 import com.example.demo.mysql.jpa.HealthView;
 import com.example.demo.mysql.jpa.Personal;
 import com.example.demo.mysql.jpa.PersonalDataEntity;
+import com.example.demo.mysql.jpa.PersonalSpec;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
@@ -44,6 +53,9 @@ public class ThymeleafController {
 	private Personal mPersonal;
 	@Autowired
 	private HealthView mHealthView;
+
+	@Value("${root_execute:false}")
+	private boolean mRootExecute;
 
 	@Value("${admin_id}")
 	private long mAdminId;
@@ -79,6 +91,130 @@ public class ThymeleafController {
 		return mEncoder.matches(target, hash);
 	}
 
+	/**
+	 * 
+	 * @param form
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/registerLumpData", method = RequestMethod.GET)
+	public String registerLumpDataPage(
+			@ModelAttribute("uploadForm") UploadForm form, Model model) {
+		model.addAttribute("title", "register the lump of temperature data");
+		return "uploadData";
+	}
+
+	/**
+	 * 
+	 * @param form
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/registerLumpUser", method = RequestMethod.GET)
+	public String registerLumpUserPage(
+			@ModelAttribute("uploadForm") UploadForm form, Model model) {
+		model.addAttribute("title", "register the lump of user information");
+		return "uploadUser";
+	}
+
+	@RequestMapping(value = "/uploadData", method = RequestMethod.POST)
+	public String uploadDatas(
+			@RequestParam("uploadFile") MultipartFile file,
+			RedirectAttributes redirectAttributes, Model model) {
+		String rc = "success";
+		System.out.println(file.getOriginalFilename());
+
+		if (!mRootExecute) {
+			rc = "permition denied";
+			model.addAttribute("result", rc);
+			return "result";
+		}
+
+		List<String> lines = null;
+		try {
+			lines = getLines(file);
+		} catch (Exception e) {
+			e.printStackTrace();
+			rc = e.getMessage();
+			model.addAttribute("result", rc);
+			return "result";
+		}
+		List<PersonalDataEntity> persons = mPersonal.getRepository().findAll();
+		if (persons.isEmpty()) {
+			rc = "no user data.";
+			model.addAttribute("result", rc);
+			return "result";
+		}
+		for (int i = 1; i < lines.size(); i++) {
+			System.out.println(lines.get(i));
+			String[] flds = lines.get(i).split(",");
+			Long pid = null;
+			for (int j = 0; j < persons.size(); j++) {
+				if (!persons.get(j).getName().equals(flds[1])) {
+					continue;
+				}
+				if (!persons.get(j).getMail().equals(flds[2])) {
+					continue;
+				}
+				pid = new Long(persons.get(j).getId());
+			}
+			if (pid == null) {
+				continue;
+			}
+			mHealth.append(pid, Long.parseLong(flds[4]), Float.parseFloat(flds[3]));
+		}
+		model.addAttribute("result", rc);
+		return "result";
+	}
+
+	/**
+	 * 
+	 * @param file
+	 * @param redirectAttributes
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/uploadUser", method = RequestMethod.POST)
+	public String uploadUsers(
+			@RequestParam("uploadFile") MultipartFile file,
+			RedirectAttributes redirectAttributes, Model model) {
+		String rc = "success";
+		System.out.println(file.getOriginalFilename());
+
+		if (!mRootExecute) {
+			rc = "permition denied";
+			model.addAttribute("result", rc);
+			return "result";
+		}
+
+		List<String> lines = null;
+		try {
+			lines = getLines(file);
+		} catch (Exception e) {
+			e.printStackTrace();
+			rc = e.getMessage();
+		}
+		for (int i = 1; i < lines.size(); i++) {
+			System.out.println(lines.get(i));
+			String[] flds = lines.get(i).split(",");
+			List<PersonalDataEntity> persons =  mPersonal.getRepository().findAll(
+					Specification.where(
+							PersonalSpec.fieldsEquals("mName", flds[1]).and(
+									PersonalSpec.fieldsEquals("mMail", flds[2]))));
+			if (persons.isEmpty()) {
+				mPersonal.update(flds[1], flds[2]);
+			}
+		}
+		model.addAttribute("result", rc);
+		return "result";
+	}
+
+	/**
+	 * 
+	 * @param hash
+	 * @param writer
+	 * @throws IOException
+	 */
 	@RequestMapping(value = "/_report.csv", method = RequestMethod.GET, produces = "text/csv")
 	public void _reportData(
 			@RequestParam(value = "hash") String hash,
@@ -99,7 +235,7 @@ public class ThymeleafController {
 			record += ",";
 			record += e.getMail();
 			record += ",";
-			record += String.valueOf(e.getTemperature());
+			record += String.format("%.1f", e.getTemperature());
 			record += ",";
 			record += String.valueOf(e.getTimeStamp());
 			record += "\r\n";
@@ -107,6 +243,13 @@ public class ThymeleafController {
 		}
 	}
 
+	/**
+	 * 
+	 * @param hash
+	 * @param csv
+	 * @return
+	 * @throws IOException
+	 */
 	@RequestMapping(value = "/report/{csv}.csv", method = RequestMethod.GET, produces = "text/csv")
 	public ResponseEntity<byte[]> reportData(
 			@RequestParam(value = "hash") String hash,
@@ -133,7 +276,7 @@ public class ThymeleafController {
 			record += ",";
 			record += e.getMail();
 			record += ",";
-			record += String.valueOf(e.getTemperature());
+			record += String.format("%.1f", e.getTemperature());
 			record += ",";
 			record += String.valueOf(e.getTimeStamp());
 			record += ",";
@@ -141,6 +284,76 @@ public class ThymeleafController {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy'/'MM'/'dd','kk':'mm':'ss");
 			sdf.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
 			record += sdf.format(d);
+			record += "\r\n";
+		}
+		return new ResponseEntity<>(record.getBytes("MS932"), headers, HttpStatus.OK);
+	}
+
+	/**
+	 * 
+	 * @param hash
+	 * @param csv
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/user/{csv}.csv", method = RequestMethod.GET, produces = "text/csv")
+	public ResponseEntity<byte[]> reportPersonalData(
+			@RequestParam(value = "hash") String hash,
+			@PathVariable("csv") String csv) throws IOException {
+		String csv_file = csv + ".csv";
+		HttpHeaders headers = new HttpHeaders();
+		String headerValue = String.format("attachment; filename=\"%s\"; filename*=UTF-8''%s",
+				csv_file, UriUtils.encode(csv_file, StandardCharsets.UTF_8.name()));
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+
+		List<PersonalDataEntity> list = null;
+		if (isAdministrator(hash)) {
+			list = mPersonal.getRepository().findAll();
+		}
+		String record = "id,name,mail\r\n";
+		for (int i = 0; (list != null) && (i < list.size()); i++) {
+			PersonalDataEntity e = list.get(i);
+			record += String.valueOf(e.getId());
+			record += ",";
+			record += e.getName();
+			record += ",";
+			record += e.getMail();
+			record += "\r\n";
+		}
+		return new ResponseEntity<>(record.getBytes("MS932"), headers, HttpStatus.OK);
+	}
+
+	/**
+	 * 
+	 * @param hash
+	 * @param csv
+	 * @return
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/rawData/{csv}.csv", method = RequestMethod.GET, produces = "text/csv")
+	public ResponseEntity<byte[]> reportRawData(
+			@RequestParam(value = "hash") String hash,
+			@PathVariable("csv") String csv) throws IOException {
+		String csv_file = csv + ".csv";
+		HttpHeaders headers = new HttpHeaders();
+		String headerValue = String.format("attachment; filename=\"%s\"; filename*=UTF-8''%s",
+				csv_file, UriUtils.encode(csv_file, StandardCharsets.UTF_8.name()));
+		headers.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+
+		List<HealthDataEntity> list = null;
+		if (isAdministrator(hash)) {
+			list = mHealth.getRepository().findAll();
+		}
+		String record = "id,person,timestamp,temperature\r\n";
+		for (int i = 0; (list != null) && (i < list.size()); i++) {
+			HealthDataEntity e = list.get(i);
+			record += String.valueOf(e.getId());
+			record += ",";
+			record += String.valueOf(e.getPersonalId());
+			record += ",";
+			record += String.valueOf(e.getTimeStamp());
+			record += ",";
+			record += String.format("%.1f", e.getTemperature());
 			record += "\r\n";
 		}
 		return new ResponseEntity<>(record.getBytes("MS932"), headers, HttpStatus.OK);
@@ -388,5 +601,18 @@ public class ThymeleafController {
 			}
 		}
 		return "data";
+	}
+
+	@SuppressWarnings("unused")
+	private List<String> getLines(final MultipartFile file) throws Exception {
+		List<String> lines = new ArrayList<String>();
+		InputStream stream = file.getInputStream();
+		Reader reader = new InputStreamReader(stream);
+		BufferedReader buf= new BufferedReader(reader);
+		String line;
+		while((line = buf.readLine()) != null) {
+			lines.add(line);
+		}
+		return lines;
 	}
 }
