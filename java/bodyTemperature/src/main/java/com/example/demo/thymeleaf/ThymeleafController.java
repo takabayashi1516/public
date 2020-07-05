@@ -518,11 +518,17 @@ public class ThymeleafController {
 	 */
 	private boolean isAdministrator(String hash) {
 		PersonalDataEntity e = mPersonal.get(mAdminId);
+		if (e == null) {
+			return false;
+		}
 		return testHash(e.getMail(), hash);
 	}
 
 	public String getAdministratorHash() {
 		PersonalDataEntity e = mPersonal.get(mAdminId);
+		if (e == null) {
+			return null;
+		}
 		return getHash(e.getMail());
 	}
 
