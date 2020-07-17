@@ -156,7 +156,7 @@ public class ThymeleafController {
 				if (!persons.get(j).getMail().equals(flds[2])) {
 					continue;
 				}
-				pid = new Long(persons.get(j).getId());
+				pid = persons.get(j).getId();
 			}
 			if (pid == null) {
 				continue;

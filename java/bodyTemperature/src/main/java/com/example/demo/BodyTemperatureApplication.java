@@ -72,7 +72,7 @@ public class BodyTemperatureApplication {
 		broadcastMail(mIsBootBroadcast);
 	}
 
-	@Scheduled(cron = "0 30 8 * * *", zone = "Asia/Tokyo")
+	@Scheduled(cron = "0 0 8 * * *", zone = "Asia/Tokyo")
 	public void doBroadcastRequest() {
 		broadcastMail(true);
 	}
