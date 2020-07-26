@@ -3,6 +3,9 @@
  */
 package com.example.demo;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -15,6 +18,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.example.demo.mysql.jdbc.SqlController;
+import com.example.demo.mysql.jpa.Health;
+import com.example.demo.mysql.jpa.HealthDataEntity;
 import com.example.demo.mysql.jpa.Personal;
 import com.example.demo.thymeleaf.ThymeleafController;
 
@@ -28,6 +33,9 @@ public class BodyTemperatureApplication {
 	private Personal mPersonal;
 	@Autowired
 	private MailSender mMailSender;
+	@Autowired
+	private Health mHealth;
+
 	@Autowired
 	private ThymeleafController mThymeleafController;
 
@@ -85,12 +93,22 @@ public class BodyTemperatureApplication {
 			while (hash.substring(hash.length() - 1).equals(".")) {
 				hash = mThymeleafController.getHash(e.getMail());
 			}
-			String msg = "http://" + mHost + ":" + mPort + "/personal?hash=" + hash + "\n";
-			msg += "confirm: ";
+			HealthDataEntity he = mHealth.getLatest(e.getId());
+			String msg = "";
+			String title = "";
+			if (he.getTimeStamp() < ((new Date().getTime()) - (60 * 60 * 24 * 1000))) {
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+				msg = "[alert] recently data: " + sdf.format(he.getTimeStamp()) + "\n\n";
+				title = "[alert] recently->" + sdf.format(he.getTimeStamp()) + " ";
+			}
+			title += "request measure body temperature!";
+			msg += "http://" + mHost + ":" + mPort + "/personal?hash=" + hash + "\n\n";
+			msg += "confirm: \n";
 			msg += "http://" + mHost + ":" + mPort + "/data?hash=" + hash + "\n";
+			System.out.println(title);
 			System.out.println(msg);
 			if (action) {
-				sendMail(e.getMail(), "request measure body temperature!", msg);
+				sendMail(e.getMail(), title, msg);
 			}
 		});
 	}
