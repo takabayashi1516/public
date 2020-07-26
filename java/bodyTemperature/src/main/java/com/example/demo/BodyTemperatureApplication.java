@@ -96,7 +96,7 @@ public class BodyTemperatureApplication {
 			HealthDataEntity he = mHealth.getLatest(e.getId());
 			String msg = "";
 			String title = "";
-			if (he.getTimeStamp() < ((new Date().getTime()) - (60 * 60 * 24 * 1000))) {
+			if ((he != null) && (he.getTimeStamp() < ((new Date().getTime()) - (60 * 60 * 24 * 1000)))) {
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
 				msg = "[alert] recently data: " + sdf.format(he.getTimeStamp()) + "\n\n";
 				title = "[alert] recently->" + sdf.format(he.getTimeStamp()) + " ";
