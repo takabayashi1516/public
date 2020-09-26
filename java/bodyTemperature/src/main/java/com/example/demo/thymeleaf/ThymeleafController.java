@@ -315,7 +315,7 @@ public class ThymeleafController {
 		if (isAdministrator(hash)) {
 			list = mPersonal.getRepository().findAll();
 		}
-		String record = "id,name,mail\r\n";
+		String record = "id,name,mail,valid\r\n";
 		for (int i = 0; (list != null) && (i < list.size()); i++) {
 			PersonalDataEntity e = list.get(i);
 			record += String.valueOf(e.getId());
@@ -323,6 +323,8 @@ public class ThymeleafController {
 			record += e.getName();
 			record += ",";
 			record += e.getMail();
+			record += ",";
+			record += e.getValid();
 			record += "\r\n";
 		}
 		return new ResponseEntity<>(record.getBytes("MS932"), headers, HttpStatus.OK);
