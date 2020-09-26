@@ -24,6 +24,9 @@ public class PersonalDataEntity {
 	@Column(name = "mail")
 	private String mMail;
 
+	@Column(name = "valid")
+	private Boolean mValid;
+
 	public long getId() {
 		return mId;
 	}
@@ -36,11 +39,19 @@ public class PersonalDataEntity {
 		return mMail;
 	}
 
+	public boolean getValid() {
+		return (mValid == null)? true : mValid;
+	}
+
 	public void setName(String name) {
 		mName = name;
 	}
 
 	public void setMail(String mail) {
 		mMail = mail;
+	}
+
+	public void setValid(boolean valid) {
+		mValid = valid;
 	}
 }

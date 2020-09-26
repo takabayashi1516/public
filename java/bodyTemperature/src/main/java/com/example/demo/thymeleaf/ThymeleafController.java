@@ -202,7 +202,12 @@ public class ThymeleafController {
 							PersonalSpec.fieldsEquals("mName", flds[1]).and(
 									PersonalSpec.fieldsEquals("mMail", flds[2]))));
 			if (persons.isEmpty()) {
-				mPersonal.update(flds[1], flds[2]);
+				boolean valid = true;
+				try {
+					valid = Boolean.parseBoolean(flds[3]);
+				} catch (Exception e) {
+				}
+				mPersonal.update(flds[1], flds[2], valid);
 			}
 		}
 		model.addAttribute("result", rc);
@@ -434,6 +439,11 @@ public class ThymeleafController {
 			model.addAttribute("result", result);
 			return "result";
 		}
+		if (!e.getValid()) {
+			result = "fail (invalid)";
+			model.addAttribute("result", result);
+			return "result";
+		}
 		long personalId = e.getId();
 		if (!mHealth.append(personalId, Long.parseLong(epoch), Float.parseFloat(data))) {
 			result = "fail (database error)";
@@ -442,7 +452,7 @@ public class ThymeleafController {
 		return "result";
 	}
 
-	// $ curl -X POST http://${host_front}:${server.port}/regist/${name}?mail=${mail}
+	// $ curl -X POST http://${host_front}:${server.port}/regist/${name}?mail=${mail}\&valid=${valid}
 	/**
 	 * 
 	 * @param name
@@ -454,9 +464,10 @@ public class ThymeleafController {
 	public String registPersonal(
 			@PathVariable("name") String name,
 			@RequestParam(value = "mail") String mail,
+			@RequestParam(value = "valid") Boolean valid,
 			Model model) {
 		String result = ("success: " + getHash(mail));
-		result += (" id: " + mPersonal.update(name, mail));
+		result += (" id: " + mPersonal.update(name, mail, valid));
 		model.addAttribute("result", result);
 		return "result";
 	}

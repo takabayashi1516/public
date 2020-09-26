@@ -20,7 +20,7 @@ public class PersonalImpl implements Personal {
 	}
 
 	@Override
-	public long update(String name, String mail) {
+	public long update(String name, String mail, boolean valid) {
 		PersonalDataEntity d = null;
 		List<PersonalDataEntity> list = mRepository.findAll(Specification.where(
 				PersonalSpec.fieldsEquals("mMail", mail)));
@@ -28,9 +28,10 @@ public class PersonalImpl implements Personal {
 			// if e-mail duplicate
 			d = list.get(0);
 			if (d.getName().equals(name)) {
-				return -1;
+//				return -1;
 			}
 			d.setName(name);
+			d.setValid(valid);
 			mRepository.save(d);
 			d = get(mail);
 			return d.getId();
@@ -46,6 +47,7 @@ public class PersonalImpl implements Personal {
 		d = new PersonalDataEntity();
 		d.setName(name);
 		d.setMail(mail);
+		d.setValid(valid);
 		mRepository.save(d);
 		d = get(mail);
 		return d.getId();

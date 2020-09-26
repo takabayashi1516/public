@@ -88,7 +88,7 @@ public class BodyTemperatureApplication {
 	private void broadcastMail(boolean action) {
 		mPersonal.getRepository().findAll().forEach(e -> {
 			System.out.println("[" + String.valueOf(e.getId()) + "]"
-					+ e.getName() + ": " + e.getMail());
+					+ e.getName() + ": " + e.getMail() + ": " + String.valueOf(e.getValid()));
 			String hash = mThymeleafController.getHash(e.getMail());
 			while (hash.substring(hash.length() - 1).equals(".")) {
 				hash = mThymeleafController.getHash(e.getMail());
@@ -107,7 +107,7 @@ public class BodyTemperatureApplication {
 			msg += "http://" + mHost + ":" + mPort + "/data?hash=" + hash + "\n";
 			System.out.println(title);
 			System.out.println(msg);
-			if (action) {
+			if (action && e.getValid()) {
 				sendMail(e.getMail(), title, msg);
 			}
 		});
