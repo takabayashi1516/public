@@ -4,7 +4,9 @@
 package com.example.demo;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +28,8 @@ import com.example.demo.thymeleaf.ThymeleafController;
 @SpringBootApplication
 @EnableScheduling
 public class BodyTemperatureApplication {
+
+	private static final String TIME_ZONE = "Asia/Tokyo";
 
 	@Autowired
 	private SqlController mSqlController;
@@ -77,12 +81,26 @@ public class BodyTemperatureApplication {
 		System.out.println("update rc=" + rc);
 
 		System.out.println("admin: " + mThymeleafController.getAdministratorHash());
+//		if (!checkDate()) { return; }
 		broadcastMail(mIsBootBroadcast);
 	}
 
-	@Scheduled(cron = "0 0 8 * * *", zone = "Asia/Tokyo")
+	@Scheduled(cron = "0 0 8 * * *", zone = TIME_ZONE)
 	public void doBroadcastRequest() {
+		if (!checkDate()) {
+			return;
+		}
 		broadcastMail(true);
+	}
+
+	private boolean checkDate() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeZone(TimeZone.getTimeZone(TIME_ZONE));
+		int week = calendar.get(Calendar.DAY_OF_WEEK);
+		if ((week == Calendar.SUNDAY) || (week == Calendar.SATURDAY)) {
+			return false;
+		}
+		return true;
 	}
 
 	private void broadcastMail(boolean action) {
