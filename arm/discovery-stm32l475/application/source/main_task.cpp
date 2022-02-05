@@ -238,6 +238,13 @@ void CUartRxHandler::rxNotify(uint8_t *a_pbyData, uint32_t a_unLength)
 /**
  *
  */
+void CUartRxHandler::errNotify(uint32_t a_unErrorCode)
+{
+}
+
+/**
+ *
+ */
 void CUsbCdcAcmRxHandler::rxNotify(uint8_t *a_pbyData, uint32_t a_unLength)
 {
 	CMain::CExecCdcAcmReceive::CRequest *req =

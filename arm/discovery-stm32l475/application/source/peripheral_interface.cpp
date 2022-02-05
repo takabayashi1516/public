@@ -1043,6 +1043,7 @@ void CUart::errorHandler()
 {
 	::printf("l(%4d): %s: ch=%d\n", __LINE__, __PRETTY_FUNCTION__, getChannel());
 	::HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	getHandler()->errNotify(getHandle()->ErrorCode);
 }
 
 /**

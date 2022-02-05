@@ -447,6 +447,8 @@ public:
 		virtual ~CHandler();
 		///
 		virtual void rxNotify(uint8_t *a_pbyData, uint32_t a_unLength) = 0;
+		///
+		virtual void errNotify(uint32_t a_unErrorCode) = 0;
 	};
 
 public:

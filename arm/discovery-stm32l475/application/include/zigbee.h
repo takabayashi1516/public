@@ -32,6 +32,8 @@ public:
 		CRxNotify(CZigBee *a_pobjOwner) : m_pobjOwner(a_pobjOwner), m_bRxEscape(false) {}
 		///
 		virtual void rxNotify(uint8_t *a_pbyData, uint32_t a_unLength);
+		///
+		virtual void errNotify(uint32_t a_unErrorCode);
 
 	private:
 		CZigBee *getOwner() const {

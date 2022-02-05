@@ -144,6 +144,13 @@ void CZigBee::CRxNotify::rxNotify(uint8_t *a_pbyData, uint32_t a_unLength)
 
 /**
  */
+void CZigBee::CRxNotify::errNotify(uint32_t a_unErrorCode)
+{
+	::printf("l(%4d): %s: error=0x%08x\n", __LINE__, __PRETTY_FUNCTION__, (unsigned) a_unErrorCode);
+}
+
+/**
+ */
 int CZigBee::CExecTransmit::doExec(const void *a_lpParam, const int a_cnLength)
 {
 	if (a_cnLength != sizeof(CRequest*)) {
