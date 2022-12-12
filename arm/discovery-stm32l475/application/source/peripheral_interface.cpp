@@ -365,9 +365,9 @@ CSpiBus::CSlaveBuffer::~CSlaveBuffer()
  */
 void CSpiBus::CSlaveBuffer::onRequireLock()
 {
+	CTripleBuffer::onRequireLock();
 	// DMA Stream?
 	::HAL_NVIC_DisableIRQ(m_pobjOwner->getIrq());
-	CTripleBuffer::onRequireLock();
 }
 
 /**
@@ -375,9 +375,9 @@ void CSpiBus::CSlaveBuffer::onRequireLock()
  */
 void CSpiBus::CSlaveBuffer::onRequireUnLock()
 {
-	CTripleBuffer::onRequireUnLock();
 	::HAL_NVIC_EnableIRQ(m_pobjOwner->getIrq());
 	// DMA Stream?
+	CTripleBuffer::onRequireUnLock();
 }
 
 /**

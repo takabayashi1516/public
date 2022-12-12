@@ -1199,8 +1199,8 @@ void CRingBuffer::lock()
 	if (isInt) {
 		return;
 	}
-	onRequireLock();
 	m_pobjLock->lock();
+	onRequireLock();
 }
 
 /**
@@ -1212,8 +1212,8 @@ void CRingBuffer::unLock()
 	if (isInt) {
 		return;
 	}
-	m_pobjLock->unlock();
 	onRequireUnLock();
+	m_pobjLock->unlock();
 }
 
 /**
