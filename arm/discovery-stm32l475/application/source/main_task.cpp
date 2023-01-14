@@ -312,6 +312,7 @@ CMain::CMain()
 	assert_param(m_pobjExecSpiReceive);
 	assert_param(m_pobjExecInputSwitch);
 	assert_param(m_pobjIntRqMngrSwtch);
+	signalPrepare();
 }
 
 /**

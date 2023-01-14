@@ -243,6 +243,7 @@ CI2cBus::CI2cBus(I2C_TypeDef *a_pobjDevice)
 	:	CHandlerBase(~0u, 256u, 8u, 6u, NULL, true), m_pobjDevice(a_pobjDevice),
 			m_pobjHandle(NULL), m_objExecWrite(this), m_objExecWriteRead(this)
 {
+	signalPrepare();
 	waitStartUp();
 }
 
@@ -348,9 +349,9 @@ CSpiBus::CSlaveBuffer::~CSlaveBuffer()
  */
 void CSpiBus::CSlaveBuffer::onRequireLock()
 {
+	CTripleBuffer::onRequireLock();
 	// DMA Stream?
 	::HAL_NVIC_DisableIRQ(m_pobjOwner->getIrq());
-	CTripleBuffer::onRequireLock();
 }
 
 /**
@@ -358,9 +359,9 @@ void CSpiBus::CSlaveBuffer::onRequireLock()
  */
 void CSpiBus::CSlaveBuffer::onRequireUnLock()
 {
-	CTripleBuffer::onRequireUnLock();
 	::HAL_NVIC_EnableIRQ(m_pobjOwner->getIrq());
 	// DMA Stream?
+	CTripleBuffer::onRequireUnLock();
 }
 
 /**
@@ -455,6 +456,7 @@ CSpiBus::CSpiBus(SPI_TypeDef *a_pobjDevice, EMode a_nMode,
 		assert_param(a_unSlaveBuffeSize);
 		m_pobjSlaveBuffer = new CSlaveBuffer(this, a_unSlaveBuffeSize);
 	}
+	signalPrepare();
 	waitStartUp();
 }
 
@@ -681,6 +683,7 @@ CSpiBus::CHandler::~CHandler()
 CUart::CTx::CTx(CUart *a_pobjOwner)
 	:	CHandlerBase(~0u, 512u, 384u, 6u, NULL, true), m_pobjOwner(a_pobjOwner)
 {
+	signalPrepare();
 	waitStartUp();
 }
 
@@ -859,6 +862,7 @@ CUart::CUart(USART_TypeDef *a_pobjDevice, CHandler *a_pobjHandler,
 	assert_param(m_pobjInterruptRequestManager);
 	assert_param(m_pobjRingBuffer);
 	assert_param(m_pobjCmpltEvent);
+	signalPrepare();
 	waitStartUp();
 }
 
@@ -1283,6 +1287,7 @@ CUsbCdcAcm::CUsbCdcAcm(CHandler *a_pobjHandler)
 	assert_param(m_pobjInterruptRequestManager);
 	assert_param(m_pobjRingBuffer);
 	assert_param(m_pobjIntRequestManagerTxCmplt);
+	signalPrepare();
 	waitStartUp();
 }
 
@@ -1295,6 +1300,7 @@ CAnalogInput::CAnalogInput(const ADC_TypeDef *a_cpobjAdc,
 {
 	::memset(&m_objAdcHandleTypeDef, 0, sizeof(m_objAdcHandleTypeDef));
 	m_objAdcHandleTypeDef.Instance = const_cast<ADC_TypeDef *>(a_cpobjAdc);
+	signalPrepare();
 	waitStartUp();
 }
 

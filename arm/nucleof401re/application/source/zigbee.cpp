@@ -375,6 +375,7 @@ CZigBee::CZigBee(CRfEventListener *a_pobjEventListener)
 	assert_param(m_pobjExecTransmit);
 	assert_param(m_pobjExecAtCommand);
 	assert_param(m_pobjExecSetMainteMode);
+	signalPrepare();
 	waitStartUp();
 }
 

@@ -393,6 +393,7 @@ void	CThreadFrameBase::mainRoutine(void *a_lpParam)
 void	*CThreadFrameBase::main()
 {
 //	::printf("l(%4d): %s: frame=%p\n", __LINE__, __PRETTY_FUNCTION__, this);
+	m_lpobjThreadInterface->waitPrepare();
 	int nResult = m_lpobjThreadInterface->onInitialize();
 	if (nResult) {
 		return(NULL);
@@ -613,6 +614,7 @@ CThreadInterfaceBase::CThreadInterfaceBase(uint32_t a_unRecvTimeout,
 		bool a_bBlocking)
 	:	m_pobjBlockStartup(NULL)
 {
+	m_pobjBlockPrepareInstance = new CSemaphore();
 	if (a_bBlocking) {
 		m_pobjBlockStartup = new CSemaphore();
 	}
@@ -644,6 +646,28 @@ CThreadInterfaceBase::~CThreadInterfaceBase()
 		delete m_pobjBlockStartup;
 	}
 	CThreadFrame::deleteInstance(m_lpobjThreadFrame);
+}
+
+/**
+ *
+ */
+void	CThreadInterfaceBase::waitPrepare()
+{
+	if (m_pobjBlockPrepareInstance) {
+		m_pobjBlockPrepareInstance->wait();
+		delete m_pobjBlockPrepareInstance;
+		m_pobjBlockPrepareInstance = NULL;
+	}
+}
+
+/**
+ *
+ */
+void	CThreadInterfaceBase::signalPrepare()
+{
+	if (m_pobjBlockPrepareInstance) {
+		m_pobjBlockPrepareInstance->signal();
+	}
 }
 
 /**

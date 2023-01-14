@@ -19,6 +19,7 @@ CBme280::CBme280(CI2cBus *a_pobjI2c)
 	:	CHandlerBase(~0u, 256u, 16u, 6u, NULL, true),
 		m_pobjI2c(a_pobjI2c), m_objExecGetInfo(this)
 {
+	signalPrepare();
 	waitStartUp();
 }
 

@@ -282,6 +282,7 @@ private:
 	CLock			m_objLock;
 	///
 	CSemaphore		*m_pobjBlockStartup;
+	CSemaphore		*m_pobjBlockPrepareInstance;
 
 protected:
 	///
@@ -296,6 +297,8 @@ protected:
 			const void *a_lpParam, const int a_cnLength,
 			CThreadFrame::CResponseMessage *a_lpobjResponse,
 			CThreadFrameBase::CObserverBase *a_lpobjObserver);
+
+	void	signalPrepare();
 
 	///
 	void	waitStartUp();
@@ -315,6 +318,7 @@ public:
 	///
 	virtual ~CThreadInterfaceBase();
 
+	void	waitPrepare();
 	///
 	void	signalStartUp();
 
@@ -414,7 +418,7 @@ public:
 			uint32_t a_unQueues, uint32_t a_unPriority,
 			CThreadFrame::CObserver *a_lpobjObserver, bool a_bBlocking = false);
 	///
-	~CHandlerBase();
+	virtual ~CHandlerBase();
 	///
 	int	registerExec(const int a_cnRequest, CExecBase *a_lpobjExec);
 	///
