@@ -183,6 +183,11 @@ public:
 		EModeMaster = 0,
 		EModeSlave
 	};
+	///
+	enum ESsCntrlMode {
+		ESsCntrlModeHardware = 0,
+		ESsCntrlModeSoftware
+	};
 
 public:
 	/**
@@ -278,7 +283,7 @@ public:
 
 public:
 	///
-	CSpiBus(SPI_TypeDef *a_pobjDevice, EMode a_nMode = EModeMaster,
+	CSpiBus(SPI_TypeDef *a_pobjDevice, EMode a_nMode = EModeMaster, ESsCntrlMode a_nSsCntrlMode = ESsCntrlModeHardware,
 			CHandler *a_pobjHandler = NULL, uint32_t a_unSlaveBuffeSize = 0u);
 	///
 	virtual ~CSpiBus();
@@ -322,6 +327,10 @@ public:
 		return m_cnMode;
 	}
 	///
+	const ESsCntrlMode getSsCntrlMode() const {
+		return m_cnSsCntrlMode;
+	}
+	///
 	CSlaveBuffer *getSlaveBuffer() const {
 		return m_pobjSlaveBuffer;
 	}
@@ -340,6 +349,7 @@ protected:
 
 private:
 	const EMode			m_cnMode;
+	const ESsCntrlMode	m_cnSsCntrlMode;
 	SPI_TypeDef			*m_pobjDevice;
 	SPI_HandleTypeDef	*m_pobjHandle;
 	CExecWrite			m_objExecWrite;

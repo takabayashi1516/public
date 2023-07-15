@@ -98,10 +98,10 @@ system/source/diag/trace_impl.c \
 CPP_SOURCES =  \
 system/source/lib/_cxx.cpp \
 $(FRAMEWORK_DIR)/source/framework.cpp \
-application/source/bme280.cpp \
+$(FRAMEWORK_DIR)/application/source/bme280.cpp \
 application/source/main_task.cpp \
 application/source/peripheral_interface.cpp \
-application/source/zigbee.cpp \
+$(FRAMEWORK_DIR)/application/source/zigbee.cpp \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -180,6 +180,7 @@ C_INCLUDES =  \
 -Isystem/include/cortexm \
 -I$(FRAMEWORK_DIR)/include \
 -Iapplication/include \
+-I$(FRAMEWORK_DIR)/application/include \
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections

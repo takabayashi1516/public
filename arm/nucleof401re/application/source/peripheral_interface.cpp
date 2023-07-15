@@ -436,9 +436,9 @@ int CSpiBus::CExecWriteRead::doExec(const void *a_lpParam, const int a_cnLength)
 /**
  *
  */
-CSpiBus::CSpiBus(SPI_TypeDef *a_pobjDevice, EMode a_nMode,
+CSpiBus::CSpiBus(SPI_TypeDef *a_pobjDevice, EMode a_nMode, ESsCntrlMode a_nSsCntrlMode,
 		CHandler *a_pobjHandler, uint32_t a_unSlaveBuffeSize)
-	:	CHandlerBase(~0u, 256u, 8u, 6u, NULL, true), m_cnMode(a_nMode),
+	:	CHandlerBase(~0u, 256u, 8u, 6u, NULL, true), m_cnMode(a_nMode), m_cnSsCntrlMode(a_nSsCntrlMode),
 			m_pobjDevice(a_pobjDevice), m_pobjHandle(NULL),
 			m_objExecWrite(this), m_objExecWriteRead(this),
 			m_pobjHandler(a_pobjHandler), m_pobjSlaveBuffer(NULL)
@@ -489,10 +489,14 @@ int CSpiBus::onInitialize()
 	h->Init.DataSize = SPI_DATASIZE_8BIT;
 	h->Init.CLKPolarity = SPI_POLARITY_LOW;
 	h->Init.CLKPhase = SPI_PHASE_1EDGE;
-	if (m_cnMode == EModeMaster) {
-		h->Init.NSS = SPI_NSS_HARD_OUTPUT;
-	} else {
-		h->Init.NSS = SPI_NSS_HARD_INPUT;
+	if (m_cnSsCntrlMode == ESsCntrlModeHardware) {
+		if (m_cnMode == EModeMaster) {
+			h->Init.NSS = SPI_NSS_HARD_OUTPUT;
+		} else {
+			h->Init.NSS = SPI_NSS_HARD_INPUT;
+		}
+	} else /* if (m_cnSsCntrlMode == ESsCntrlModeSoftware) */ {
+		h->Init.NSS = SPI_NSS_SOFT;
 	}
 	h->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4; /* <- max /2 in spec but /4 */
 	h->Init.FirstBit = SPI_FIRSTBIT_MSB;
@@ -1026,6 +1030,7 @@ void CUart::errorHandler()
 {
 	::printf("l(%4d): %s: ch=%d\n", __LINE__, __PRETTY_FUNCTION__, getChannel());
 	::HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+	getHandler()->errNotify(getHandle()->ErrorCode);
 }
 
 /**

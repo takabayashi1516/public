@@ -249,6 +249,13 @@ void CUartRxHandler::rxNotify(uint8_t *a_pbyData, uint32_t a_unLength)
 /**
  *
  */
+void CUartRxHandler::errNotify(uint32_t a_unErrorCode)
+{
+}
+
+/**
+ *
+ */
 void CUsbCdcAcmRxHandler::rxNotify(uint8_t *a_pbyData, uint32_t a_unLength)
 {
 	CMain::CExecCdcAcmReceive::CRequest *req =
@@ -363,7 +370,8 @@ int CMain::onInitialize()
 
 	m_pobjSpi1 = new CSpiBus(SPI1, CSpiBus::EModeMaster);
 	m_pobjSpi2 = new CSpiBus(SPI2, CSpiBus::EModeMaster);
-	m_pobjSpi3 = new CSpiBus(SPI3, CSpiBus::EModeSlave, new CSpiRxHandler(3u, this), sizeof(command_t));
+	m_pobjSpi3 = new CSpiBus(SPI3, CSpiBus::EModeSlave, CSpiBus::ESsCntrlModeHardware,
+			new CSpiRxHandler(3u, this), sizeof(command_t));
 #ifdef __TEST_EXTRA
 	CTestObserver *obsrv = new CTestObserver(getSpi(3));
 	getSpi(3)->setObserver(obsrv);

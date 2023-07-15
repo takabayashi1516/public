@@ -365,7 +365,8 @@ int CMain::onInitialize()
 	m_pobjUart4 = new CUart(UART4, m_pobjZigBee->getInterfaceListener(),
 			&uartInitType);
 
-	m_pobjSpi1 = new CSpiBus(SPI1, CSpiBus::EModeSlave, new CSpiRxHandler(1u, this), sizeof(command_t));
+	m_pobjSpi1 = new CSpiBus(SPI1, CSpiBus::EModeSlave, CSpiBus::ESsCntrlModeHardware,
+			new CSpiRxHandler(1u, this), sizeof(command_t));
 	m_pobjSpi2 = new CSpiBus(SPI2, CSpiBus::EModeMaster);
 	m_pobjSpi3 = new CSpiBus(SPI3, CSpiBus::EModeMaster);
 #ifdef __TEST_EXTRA
