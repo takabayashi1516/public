@@ -1,0 +1,27 @@
+menu "Example Configuration"
+
+    config TEST_TIMEOUT
+        int "test message timeout."
+        default 5000
+        help
+            -
+
+    config TEST_STACK_SIZE
+        int "test thread stack size."
+        default 1024
+        help
+            -
+
+    config TEST_MESSAGE_SIZE
+        int "test thread message size."
+        default 512
+        help
+            -
+
+    config TEST_THREAD_PRIORITY
+        int "test thread priority."
+        default 6
+        help
+            -
+
+endmenu
