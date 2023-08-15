@@ -1,0 +1,15 @@
+menu "Example 'GATT CLIENT' Config"
+
+    config EXAMPLE_DUMP_ADV_DATA_AND_SCAN_RESP
+        bool "Dump whole adv data and scan response data in example"
+        default n
+
+    config MULTIPUL_CONNECT
+        bool "Use multipul connection"
+        default n
+
+    config UTIL_DEBUG_DUMP
+        bool "Use debug dump"
+        default n
+
+endmenu
