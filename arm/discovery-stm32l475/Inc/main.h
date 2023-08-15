@@ -90,6 +90,15 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define BLE_INT_Pin GPIO_PIN_6
+#define BLE_INT_GPIO_Port GPIOE
+#define BLE_INT_EXTI_IRQn EXTI9_5_IRQn
+#define BLE_CS_Pin GPIO_PIN_13
+#define BLE_CS_GPIO_Port GPIOD
+#define TOF_RESET_Pin GPIO_PIN_6
+#define TOF_RESET_GPIO_Port GPIOC
+#define BLE_RESET_Pin GPIO_PIN_8
+#define BLE_RESET_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -102,6 +102,8 @@ $(FRAMEWORK_DIR)/application/source/bme280.cpp \
 application/source/main_task.cpp \
 application/source/peripheral_interface.cpp \
 $(FRAMEWORK_DIR)/application/source/zigbee.cpp \
+application/enable.cpp \
+application/sensors.cpp \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -181,6 +183,7 @@ C_INCLUDES =  \
 -I$(FRAMEWORK_DIR)/include \
 -Iapplication/include \
 -I$(FRAMEWORK_DIR)/application/include \
+-Iapplication \
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections

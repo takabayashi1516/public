@@ -17,6 +17,9 @@
 #include <main_task.h>
 #include <command.h>
 
+#include <enable.h>
+#include <sensors.h>
+
 #define DEFAULT_MAINTASK_TIMEOUT (2000u)
 #define ETX (0x03)
 
@@ -194,6 +197,9 @@ void EXTI15_10_IRQHandler(void)
  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	if (GPIO_Pin == GPIO_PIN_6) {
+		return;
+	}
 	CMain::getSingleton()->interruptSwitch(GPIO_Pin);
 }
 
@@ -380,6 +386,9 @@ int CMain::onInitialize()
 
 	::MX_TIM3_Init();
 
+	::HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+	::HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
 	(void) registerExec(ERequestZigBeeReceive, m_pobjExecZigBeeReceive);
 	(void) registerExec(ERequestZigBeeTransmitStatus, m_pobjExecZigBeeTransmitStatus);
 	(void) registerExec(ERequestZigBeeAtResponse, m_pobjExecZigBeeAtResponse);
@@ -404,6 +413,10 @@ int CMain::onInitialize()
 #endif /* __TEST_EXTRA */
 
 	::HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+
+	::ble_init();
+	::initLPS22hh();
+	::initHTS221();
 
 	return CThreadInterfaceBase::onInitialize();
 }
@@ -538,6 +551,10 @@ int	CMain::onTimeout()
 	default:
 		break;
 	}
+
+	updateSignedFloat(CUSTOM_SERVICE_HANDLE,PRESS_CHAR_HANDLE,VALUE_PRESS,10,getPressure());
+	updateSignedFloat(CUSTOM_SERVICE_HANDLE,HUM_CHAR_HANDLE,VALUE_HUM,8,getHumidity());
+	updateSignedFloat(CUSTOM_SERVICE_HANDLE,TEMP_CHAR_HANDLE,VALUE_TEMP,9,getTemperature());
 
 #ifdef __TEST_EXTRA
 	__testExtra();

@@ -172,6 +172,12 @@ int main(void)
   MX_SPI2_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  //RESET BLE MODULE
+  HAL_GPIO_WritePin(BLE_RESET_GPIO_Port,BLE_RESET_Pin,GPIO_PIN_RESET);
+  HAL_Delay(10);
+  HAL_GPIO_WritePin(BLE_RESET_GPIO_Port,BLE_RESET_Pin,GPIO_PIN_SET);
+
+  ble_init();
 
   /* USER CODE END 2 */
 
@@ -767,6 +773,41 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(BLE_CS_GPIO_Port, BLE_CS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(TOF_RESET_GPIO_Port, TOF_RESET_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(BLE_RESET_GPIO_Port, BLE_RESET_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : BLE_INT_Pin */
+  GPIO_InitStruct.Pin = BLE_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BLE_INT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BLE_CS_Pin */
+  GPIO_InitStruct.Pin = BLE_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(BLE_CS_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : TOF_RESET_Pin */
+  GPIO_InitStruct.Pin = TOF_RESET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(TOF_RESET_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : BLE_RESET_Pin */
+  GPIO_InitStruct.Pin = BLE_RESET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(BLE_RESET_GPIO_Port, &GPIO_InitStruct);
+
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PB2 */
