@@ -70,12 +70,13 @@ class SqlUtilBase:
         try:
           #print(f"--- {query1}")
           self.cur.execute(query1)
-          if is_commit:
-            self.conn.commit()
         except Exception as e:
           if is_commit:
             self.conn.rollback()
           raise e
+      if is_commit:
+        #print("--- commit")
+        self.conn.commit()
     else:
       raise Exception(Constants.EXCPT_SQLUTIL_EXEC_FAILED.format(self))
 
