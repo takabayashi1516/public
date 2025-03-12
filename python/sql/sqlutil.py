@@ -27,12 +27,13 @@ class Constants:
 
 class SqlUtilBase:
   def __init__(self, host: str, user: str, password: str,
-      database: str, port: int):
+      database: str, notify_param, port: int):
     self.host = host
     self.user = user
     self.password = password
     self.database = database
     self.port = port
+    self.notify_param = notify_param
     self.conn = None
     self.cur = None
 
@@ -70,6 +71,11 @@ class SqlUtilBase:
         try:
           #print(f"--- {query1}")
           self.cur.execute(query1)
+          try:
+            self.notify(self.cur.description,
+                self.notify_param)
+          except Exception as e1:
+            pass
         except Exception as e:
           if is_commit:
             self.conn.rollback()
@@ -88,20 +94,25 @@ class SqlUtilBase:
       sql = f.read()
       self.execute(sql = sql, is_commit = is_commit)
 
+  def notify(self, description, notify_param):
+    return
+
   def fetchall(self):
     if self.cur:
+      #print(self.cur.description)
       return self.cur.fetchall()
-    else:
-      raise Exception(Constants.EXCPT_SQLUTIL_CONN_NOT_EXIST.format(self))
-      return None
+    raise Exception(Constants.EXCPT_SQLUTIL_CONN_NOT_EXIST.format(self))
+    return None
 
 '''
 $ python -c "import sqlutil; sqlutl=sqlutil.PostgreSqlUtil(host=${HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}'); rows=sqlutl.fetchall(); print(rows)"
 '''
 class PostgreSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
-      database: str, port: int = Constants.DEFULT_PORT_POSTGRESQL):
-    super().__init__(host, user, password, database, port)
+      database: str, notify_param = None,
+      port: int = Constants.DEFULT_PORT_POSTGRESQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
 
   def connect(self):
     super().disconnect()
@@ -118,8 +129,10 @@ $ python -c "import sqlutil; sqlutl=sqlutil.MySqlUtil(host=${HOST},user=${USER},
 '''
 class MySqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
-      database: str, port: int = Constants.DEFULT_PORT_MYSQL):
-    super().__init__(host, user, password, database, port)
+      database: str, notify_param = None,
+      port: int = Constants.DEFULT_PORT_MYSQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
 
   def connect(self):
     super().disconnect()
@@ -135,8 +148,10 @@ $ python -c "import sqlutil; sqlutl=sqlutil.OracleSqlUtil(host=${HOST},user=${US
 '''
 class OracleSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
-      database: str, port: int = Constants.DEFULT_PORT_ORACLESQL):
-    super().__init__(host, user, password, database, port)
+      database: str, notify_param = None,
+      port: int = Constants.DEFULT_PORT_ORACLESQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
 
   def connect(self):
     super().disconnect()

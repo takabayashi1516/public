@@ -14,6 +14,48 @@ class Constants:
   DB_ENGINE_POSTGRESQL: int = 1
   DB_ENGINE_ORACLESQL: int = 2
 
+class CustomPostgreSqlUtil(PostgreSqlUtil):
+  def __init__(self, host: str, user: str, password: str,
+      database: str, notify_param = None,
+      port: int = SqlUtilConstants.DEFULT_PORT_POSTGRESQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
+    self.rows = None
+
+  def notify(self, description, notify_param):
+    for desc in description:
+      print("{}, ".format(desc[0]), end = "")
+    print("", end = "\n")
+    self.rows = self.fetchall()
+
+class CustomMySqlUtil(MySqlUtil):
+  def __init__(self, host: str, user: str, password: str,
+      database: str, notify_param = None,
+      port: int = SqlUtilConstants.DEFULT_PORT_MYSQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
+    self.rows = None
+
+  def notify(self, description, notify_param):
+    for desc in description:
+      print("{}, ".format(desc[0]), end = "")
+    print("", end = "\n")
+    self.rows = self.fetchall()
+
+class CustomOracleSqlUtil(OracleSqlUtil):
+  def __init__(self, host: str, user: str, password: str,
+      database: str, notify_param = None,
+      port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
+    self.rows = None
+
+  def notify(self, description, notify_param):
+    for desc in description:
+      print("{}, ".format(desc[0]), end = "")
+    print("", end = "\n")
+    self.rows = self.fetchall()
+
 def main():
   parser = argparse.ArgumentParser(description = "")
   parser.add_argument("--host", default = 'localhost')
@@ -32,26 +74,29 @@ def main():
   if args.engine == Constants.DB_ENGINE_MYSQL:
     if port == 0:
       port = SqlUtilConstants.DEFULT_PORT_MYSQL
-    sqlutl = MySqlUtil(host = args.host,
+    sqlutl = CustomMySqlUtil(host = args.host,
         user = args.user,
         password = args.password,
         database = args.database,
+        notify_param = args.engine,
         port = port)
   elif args.engine == Constants.DB_ENGINE_POSTGRESQL:
     if port == 0:
       port = SqlUtilConstants.DEFULT_PORT_POSTGRESQL
-    sqlutl = PostgreSqlUtil(host = args.host,
+    sqlutl = CustomPostgreSqlUtil(host = args.host,
         user = args.user,
         password = args.password,
         database = args.database,
+        notify_param = args.engine,
         port = port)
   elif args.engine == Constants.DB_ENGINE_ORACLESQL:
     if port == 0:
       port = SqlUtilConstants.DEFULT_PORT_ORACLESQL
-    sqlutl = OracleSqlUtil(host = args.host,
+    sqlutl = CustomOracleSqlUtil(host = args.host,
         user = args.user,
         password = args.password,
         database = args.database,
+        notify_param = args.engine,
         port = port)
 
   sqlutl.connect()
@@ -61,9 +106,11 @@ def main():
 
   sqlutl.execute(args.query, False)
   if not args.hide:
-    rows = sqlutl.fetchall()
+    rows = sqlutl.rows
     for row in rows:
-      print(row)
+      for cell in row:
+        print("{}, ".format(cell), end = "")
+      print("", end = "\n")
 
 if __name__ == "__main__":
   main()
