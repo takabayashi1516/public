@@ -51,6 +51,9 @@ class SqlUtilBase:
       self.conn.close()
       self.conn = None
 
+  def set_notify_pram(self, notify_param):
+    self.notify_param = notify_param
+
   def __exclude_comments(self, query: str) -> str:
     query1 = query.replace('\r\n', '\n').replace('\r', '\n')
     queries = query1.split('\n')

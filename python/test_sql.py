@@ -20,13 +20,15 @@ class CustomPostgreSqlUtil(PostgreSqlUtil):
       port: int = SqlUtilConstants.DEFULT_PORT_POSTGRESQL):
     super().__init__(host, user, password, database,
         notify_param, port)
-    self.rows = None
+    self.descs = {}
+    self.rows = {}
 
   def notify(self, description, notify_param):
     for desc in description:
-      print("{}, ".format(desc[0]), end = "")
-    print("", end = "\n")
-    self.rows = self.fetchall()
+      pass
+    self.descs[notify_param] = description
+    self.rows[notify_param] = self.fetchall()
+    self.set_notify_pram(notify_param + 1)
 
 class CustomMySqlUtil(MySqlUtil):
   def __init__(self, host: str, user: str, password: str,
@@ -34,13 +36,15 @@ class CustomMySqlUtil(MySqlUtil):
       port: int = SqlUtilConstants.DEFULT_PORT_MYSQL):
     super().__init__(host, user, password, database,
         notify_param, port)
-    self.rows = None
+    self.descs = {}
+    self.rows = {}
 
   def notify(self, description, notify_param):
     for desc in description:
-      print("{}, ".format(desc[0]), end = "")
-    print("", end = "\n")
-    self.rows = self.fetchall()
+      pass
+    self.descs[notify_param] = description
+    self.rows[notify_param] = self.fetchall()
+    self.set_notify_pram(notify_param + 1)
 
 class CustomOracleSqlUtil(OracleSqlUtil):
   def __init__(self, host: str, user: str, password: str,
@@ -48,13 +52,15 @@ class CustomOracleSqlUtil(OracleSqlUtil):
       port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
     super().__init__(host, user, password, database,
         notify_param, port)
-    self.rows = None
+    self.descs = {}
+    self.rows = {}
 
   def notify(self, description, notify_param):
     for desc in description:
-      print("{}, ".format(desc[0]), end = "")
-    print("", end = "\n")
-    self.rows = self.fetchall()
+      pass
+    self.descs[notify_param] = description
+    self.rows[notify_param] = self.fetchall()
+    self.set_notify_pram(notify_param + 1)
 
 def main():
   parser = argparse.ArgumentParser(description = "")
@@ -71,6 +77,8 @@ def main():
 
   sqlutl = None
   port = args.port
+  pram = 0
+
   if args.engine == Constants.DB_ENGINE_MYSQL:
     if port == 0:
       port = SqlUtilConstants.DEFULT_PORT_MYSQL
@@ -78,7 +86,7 @@ def main():
         user = args.user,
         password = args.password,
         database = args.database,
-        notify_param = args.engine,
+        notify_param = pram,
         port = port)
   elif args.engine == Constants.DB_ENGINE_POSTGRESQL:
     if port == 0:
@@ -87,7 +95,7 @@ def main():
         user = args.user,
         password = args.password,
         database = args.database,
-        notify_param = args.engine,
+        notify_param = pram,
         port = port)
   elif args.engine == Constants.DB_ENGINE_ORACLESQL:
     if port == 0:
@@ -96,7 +104,7 @@ def main():
         user = args.user,
         password = args.password,
         database = args.database,
-        notify_param = args.engine,
+        notify_param = pram,
         port = port)
 
   sqlutl.connect()
@@ -104,13 +112,20 @@ def main():
   if args.sql:
     sqlutl.executeSql(args.sql, True)
 
-  sqlutl.execute(args.query, False)
+  if args.query:
+    sqlutl.execute(args.query, False)
+
   if not args.hide:
     rows = sqlutl.rows
-    for row in rows:
-      for cell in row:
-        print("{}, ".format(cell), end = "")
+    descs = sqlutl.descs
+    for key in rows:
+      for desc in descs[key]:
+        print("{}, ".format(desc[0]), end = "")
       print("", end = "\n")
+      for row in rows[key]:
+        for cell in row:
+          print("{}, ".format(cell), end = "")
+        print("", end = "\n")
 
 if __name__ == "__main__":
   main()
