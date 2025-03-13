@@ -65,29 +65,34 @@ class SqlUtilBase:
     return query1
 
   def execute(self, sql: str, is_commit: bool = True):
-    if self.cur:
-      queries = sqlparse.split(sql)
-      for query in queries:
-        query1 = self.__exclude_comments(query)
-        if not query1:
-          continue
-        try:
-          #print(f"--- {query1}")
-          self.cur.execute(query1)
-          try:
-            self.notify(self.cur.description,
-                self.notify_param)
-          except Exception as e1:
-            pass
-        except Exception as e:
-          if is_commit:
-            self.conn.rollback()
-          raise e
-      if is_commit:
-        #print("--- commit")
-        self.conn.commit()
-    else:
+    if not self.cur:
       raise Exception(Constants.EXCPT_SQLUTIL_EXEC_FAILED.format(self))
+      return
+
+    try:
+      queries = sqlparse.split(sql)
+    except Exception as e:
+      raise e
+
+    for query in queries:
+      query1 = self.__exclude_comments(query)
+      if not query1:
+        continue
+      try:
+        #print(f"--- {query1}")
+        self.cur.execute(query1)
+        try:
+          self.notify(self.cur.description,
+              self.notify_param)
+        except Exception as e1:
+          pass
+      except Exception as e:
+        if is_commit:
+          self.conn.rollback()
+        raise e
+    if is_commit:
+      #print("--- commit")
+      self.conn.commit()
 
   def executeSql(self, sql_file: str, is_commit: bool = True):
     if not os.path.exists(sql_file):
