@@ -14,6 +14,7 @@ import pymysql
 import re
 import sqlparse
 from dataclasses import dataclass
+from logging import getLogger
 
 @dataclass(frozen = True)
 class Constants:
@@ -36,6 +37,8 @@ class SqlUtilBase:
     self.notify_param = notify_param
     self.conn = None
     self.cur = None
+
+    self.logger = getLogger(name = __name__)
 
   def __del__(self):
     self.disconnect()
@@ -72,6 +75,7 @@ class SqlUtilBase:
     try:
       queries = sqlparse.split(sql)
     except Exception as e:
+      self.logger.error(sql)
       raise e
 
     for query in queries:
@@ -79,19 +83,21 @@ class SqlUtilBase:
       if not query1:
         continue
       try:
-        #print(f"--- {query1}")
+        self.logger.debug(f"execute: {query1}")
         self.cur.execute(query1)
         try:
           self.notify(self.cur.description,
               self.notify_param)
         except Exception as e1:
-          pass
+          #pass
+          self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
       except Exception as e:
         if is_commit:
           self.conn.rollback()
+        self.logger.error(f"error: {query1}")
         raise e
     if is_commit:
-      #print("--- commit")
+      self.logger.debug(f"commit:{sql}")
       self.conn.commit()
 
   def executeSql(self, sql_file: str, is_commit: bool = True):
@@ -107,7 +113,7 @@ class SqlUtilBase:
 
   def fetchall(self):
     if self.cur:
-      #print(self.cur.description)
+      self.logger.debug(self.cur.description)
       return self.cur.fetchall()
     raise Exception(Constants.EXCPT_SQLUTIL_CONN_NOT_EXIST.format(self))
     return None

@@ -1,4 +1,5 @@
 import argparse
+import logging
 from dataclasses import dataclass
 
 from sql.sqlutil import (
@@ -63,6 +64,9 @@ class CustomOracleSqlUtil(OracleSqlUtil):
     self.set_notify_pram(notify_param + 1)
 
 def main():
+  logging.basicConfig(level = logging.ERROR)
+  logger = logging.getLogger(name = __name__)
+
   parser = argparse.ArgumentParser(description = "")
   parser.add_argument("--host", default = 'localhost')
   parser.add_argument("--user", default = 'root')
