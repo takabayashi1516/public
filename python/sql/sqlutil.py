@@ -63,7 +63,10 @@ class SqlUtilBase:
     query1 = ''
     for q in queries:
       q1 = re.sub('^\-\- +.+$', '', q)
-      query1 += q1
+      if q1:
+        if query1:
+          query1 += ' '
+        query1 += q1
     query1 = query1.replace('\n', '')
     return query1
 
