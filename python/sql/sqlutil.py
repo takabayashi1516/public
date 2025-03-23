@@ -43,6 +43,8 @@ class Constants:
 class SqlUtilBase:
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param, port: int):
+    self.logger = getLogger(name = __name__)
+    self.logger.debug(f"__init__({host}, {user}, {password}, {database}, {notify_param}, {port})")
     self.host = host
     self.user = user
     self.password = password
@@ -52,10 +54,11 @@ class SqlUtilBase:
     self.conn = None
     self.cur = None
 
-    self.logger = getLogger(name = __name__)
-
   def __del__(self):
+    self.logger.debug('__del__()')
     self.disconnect()
+    self.notify_param = None
+    self.logger = None
 
   def connect(self):
     raise Exception(Constants.EXCPT_SQLUTIL_CONN_DENY.format(self))
