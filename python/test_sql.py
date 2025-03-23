@@ -64,7 +64,7 @@ class CustomOracleSqlUtil(OracleSqlUtil):
     self.set_notify_pram(notify_param + 1)
 
 def main():
-  logging.basicConfig(level = logging.ERROR)
+  logging.basicConfig(level = logging.INFO)
   logger = logging.getLogger(name = __name__)
 
   parser = argparse.ArgumentParser(description = "")

@@ -102,6 +102,7 @@ class SqlUtilBase:
       try:
         self.logger.debug(f"execute: {query1}")
         self.cur.execute(query1)
+        self.logger.info(f"executed: {query1}")
         try:
           self.notify(None, self.cur.description,
               self.notify_param)
@@ -109,14 +110,19 @@ class SqlUtilBase:
           #pass
           self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
       except Exception as e:
-        self.notify(e, self.cur.description,
-            self.notify_param)
-        if is_commit:
-          self.conn.rollback()
         self.logger.error(f"error: {query1}")
+        try:
+          self.notify(e, self.cur.description,
+              self.notify_param)
+        except Exception as e1:
+          #pass
+          self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
+        if is_commit:
+          self.logger.info(f"rollback:{sql}")
+          self.conn.rollback()
         raise e
     if is_commit:
-      self.logger.debug(f"commit:{sql}")
+      self.logger.info(f"commit:{sql}")
       self.conn.commit()
 
   def executeSql(self, sql_file: str, is_commit: bool = True):
