@@ -118,12 +118,14 @@ class SqlUtilBase:
           #pass
           self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
         if is_commit:
-          self.logger.info(f"rollback:{sql}")
+          self.logger.debug(f"rollback:{sql}")
           self.conn.rollback()
+          self.logger.info(f"rolled back")
         raise e
     if is_commit:
-      self.logger.info(f"commit:{sql}")
+      self.logger.debug(f"commit:{sql}")
       self.conn.commit()
+      self.logger.info(f"committed")
 
   def executeSql(self, sql_file: str, is_commit: bool = True):
     if not os.path.exists(sql_file):
