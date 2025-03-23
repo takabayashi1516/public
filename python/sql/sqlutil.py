@@ -76,12 +76,13 @@ class SqlUtilBase:
     queries = query1.split('\n')
     query1 = ''
     for q in queries:
-      q1 = re.sub('^\-\- +.+$', '', q)
+      q1 = re.sub('\-\- +.+$', '', q)
       if q1:
         if query1:
           query1 += ' '
         query1 += q1
-    query1 = query1.replace('\n', '')
+    query1 = re.sub('/\*.*\*/', '', query1)
+    query1 = re.sub('^ +', '', query1)
     return query1
 
   def execute(self, sql: str, is_commit: bool = True):
