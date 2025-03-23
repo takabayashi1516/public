@@ -24,7 +24,7 @@ class CustomPostgreSqlUtil(PostgreSqlUtil):
     self.descs = {}
     self.rows = {}
 
-  def notify(self, description, notify_param):
+  def notify(self, e, description, notify_param):
     for desc in description:
       pass
     self.descs[notify_param] = description
@@ -40,7 +40,7 @@ class CustomMySqlUtil(MySqlUtil):
     self.descs = {}
     self.rows = {}
 
-  def notify(self, description, notify_param):
+  def notify(self, e, description, notify_param):
     for desc in description:
       pass
     self.descs[notify_param] = description
@@ -56,7 +56,7 @@ class CustomOracleSqlUtil(OracleSqlUtil):
     self.descs = {}
     self.rows = {}
 
-  def notify(self, description, notify_param):
+  def notify(self, e, description, notify_param):
     for desc in description:
       pass
     self.descs[notify_param] = description
@@ -111,7 +111,11 @@ def main():
         notify_param = pram,
         port = port)
 
-  sqlutl.connect()
+  try:
+    sqlutl.connect()
+  except Exception as e:
+    logger.error(e)
+    return
 
   if args.sql:
     sqlutl.executeSql(args.sql, True)

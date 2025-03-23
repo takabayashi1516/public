@@ -6,6 +6,20 @@ $ pip install cx_Oracle
 $ pip install sqlparse
 '''
 
+'''
+直接接続の例
+  $ python -c "import sqlutil; sqlutl=sqlutil.PostgreSqlUtil(host=${DB_HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}',is_commit=False); rows=sqlutl.fetchall(); print(rows)"
+  $ python -c "import sqlutil; sqlutl=sqlutil.MySqlUtil(host=${DB_HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}',is_commit=False); rows=sqlutl.fetchall(); print(rows)"
+  $ python -c "import sqlutil; sqlutl=sqlutil.OracleSqlUtil(host=${DB_HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}',is_commit=False); rows=sqlutl.fetchall(); print(rows)"
+
+sshトンネリングを使用する場合の例
+  $ ssh -N -L ${DB_LOCAL_PORT}:${DB_HOST}:${DB_PORT} ${SSH_USER}@${SSH_HOST} -i $id_rsa
+
+  $ python -c "import sqlutil; sqlutl=sqlutil.PostgreSqlUtil(host=localhost,port=${DB_LOCAL_PORT},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}',is_commit=False); rows=sqlutl.fetchall(); print(rows)"
+  $ python -c "import sqlutil; sqlutl=sqlutil.MySqlUtil(host=localhost,port=${DB_LOCAL_PORT},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}',is_commit=False); rows=sqlutl.fetchall(); print(rows)"
+  $ python -c "import sqlutil; sqlutl=sqlutil.OracleSqlUtil(host=localhost,port=${DB_LOCAL_PORT},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}',is_commit=False); rows=sqlutl.fetchall(); print(rows)"
+'''
+
 import cx_Oracle
 import mysql.connector
 import os
@@ -89,12 +103,14 @@ class SqlUtilBase:
         self.logger.debug(f"execute: {query1}")
         self.cur.execute(query1)
         try:
-          self.notify(self.cur.description,
+          self.notify(None, self.cur.description,
               self.notify_param)
         except Exception as e1:
           #pass
           self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
       except Exception as e:
+        self.notify(e, self.cur.description,
+            self.notify_param)
         if is_commit:
           self.conn.rollback()
         self.logger.error(f"error: {query1}")
@@ -111,7 +127,7 @@ class SqlUtilBase:
       sql = f.read()
       self.execute(sql = sql, is_commit = is_commit)
 
-  def notify(self, description, notify_param):
+  def notify(self, err: Exception, description, notify_param):
     return
 
   def fetchall(self):
@@ -122,7 +138,6 @@ class SqlUtilBase:
     return None
 
 '''
-$ python -c "import sqlutil; sqlutl=sqlutil.PostgreSqlUtil(host=${HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}'); rows=sqlutl.fetchall(); print(rows)"
 '''
 class PostgreSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
@@ -142,7 +157,6 @@ class PostgreSqlUtil(SqlUtilBase):
     self.cur = self.conn.cursor()
 
 '''
-$ python -c "import sqlutil; sqlutl=sqlutil.MySqlUtil(host=${HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}'); rows=sqlutl.fetchall(); print(rows)"
 '''
 class MySqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
@@ -161,7 +175,6 @@ class MySqlUtil(SqlUtilBase):
     self.cur = self.conn.cursor()
 
 '''
-$ python -c "import sqlutil; sqlutl=sqlutil.OracleSqlUtil(host=${HOST},user=${USER},password=${PASSWORD},database=${DATABASE}); sqlutl.connect(); sqlutl.execute('select * from ${TABLE}'); rows=sqlutl.fetchall(); print(rows)"
 '''
 class OracleSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
