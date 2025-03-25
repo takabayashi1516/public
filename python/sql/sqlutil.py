@@ -197,10 +197,9 @@ class OracleSqlUtil(SqlUtilBase):
 
   def connect(self):
     super().disconnect()
-    self.conn = pymysql.connect(
-      host = self.host,
+    self.conn = cx_Oracle.connect(
       user = self.user,
       password = self.password,
-      database = self.database)
+      dsn = self.host + ":" + str(self.port) + "/" + self.database)
     self.cur = self.conn.cursor()
 
