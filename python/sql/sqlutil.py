@@ -79,7 +79,7 @@ class SqlUtilBase:
     queries = query1.split('\n')
     query1 = ''
     for q in queries:
-      q1 = re.sub('\-\- +.+$', '', q)
+      q1 = re.sub('^((\t)|( ))*\-\- +.*$', '', q)
       if q1:
         if query1:
           query1 += ' '
@@ -190,10 +190,10 @@ class MySqlUtil(SqlUtilBase):
 '''
 class OracleSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
-      database: str, notify_param = None,
+      service_name: str, notify_param = None,
       port: int = Constants.DEFULT_PORT_ORACLESQL):
-    super().__init__(host, user, password, database,
-        notify_param, port)
+    super().__init__(host = host, user = user, password = password,
+        database = service_name, notify_param = notify_param, port = port)
 
   def connect(self):
     super().disconnect()

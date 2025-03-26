@@ -1,6 +1,6 @@
 import argparse
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sql.sqlutil import (
     Constants as SqlUtilConstants,
@@ -14,6 +14,15 @@ class Constants:
   DB_ENGINE_MYSQL: int = 0
   DB_ENGINE_POSTGRESQL: int = 1
   DB_ENGINE_ORACLESQL: int = 2
+
+  LOG_LEVELS = {
+      0: logging.CRITICAL,
+      1: logging.ERROR,
+      2: logging.WARNING,
+      3: logging.INFO,
+      4: logging.DEBUG,
+      5: logging.NOTSET,
+    }
 
 class CustomPostgreSqlUtil(PostgreSqlUtil):
   def __init__(self, host: str, user: str, password: str,
@@ -49,9 +58,9 @@ class CustomMySqlUtil(MySqlUtil):
 
 class CustomOracleSqlUtil(OracleSqlUtil):
   def __init__(self, host: str, user: str, password: str,
-      database: str, notify_param = None,
+      service_name: str, notify_param = None,
       port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
-    super().__init__(host, user, password, database,
+    super().__init__(host, user, password, service_name,
         notify_param, port)
     self.descs = {}
     self.rows = {}
@@ -64,9 +73,6 @@ class CustomOracleSqlUtil(OracleSqlUtil):
     self.set_notify_pram(notify_param + 1)
 
 def main():
-  logging.basicConfig(level = logging.INFO)
-  logger = logging.getLogger(name = __name__)
-
   parser = argparse.ArgumentParser(description = "")
   parser.add_argument("--host", default = 'localhost')
   parser.add_argument("--user", default = 'root')
@@ -75,9 +81,13 @@ def main():
   parser.add_argument("--port", type = int, default = 0)
   parser.add_argument("--query")
   parser.add_argument("--sql")
-  parser.add_argument("--hide", action = 'store_true', default = False)
+  parser.add_argument("--commit", action = 'store_true', default = False)
   parser.add_argument("--engine", type = int, default = Constants.DB_ENGINE_MYSQL)
+  parser.add_argument("--log", type = int, default = 0)
   args = parser.parse_args()
+
+  logging.basicConfig(level = Constants.LOG_LEVELS[args.log])
+  logger = logging.getLogger(name = __name__)
 
   sqlutl = None
   port = args.port
@@ -107,7 +117,7 @@ def main():
     sqlutl = CustomOracleSqlUtil(host = args.host,
         user = args.user,
         password = args.password,
-        database = args.database,
+        service_name = args.database,
         notify_param = pram,
         port = port)
 
@@ -118,22 +128,21 @@ def main():
     return
 
   if args.sql:
-    sqlutl.executeSql(args.sql, True)
+    sqlutl.executeSql(args.sql, args.commit)
 
   if args.query:
-    sqlutl.execute(args.query, False)
+    sqlutl.execute(args.query, args.commit)
 
-  if not args.hide:
-    rows = sqlutl.rows
-    descs = sqlutl.descs
-    for key in rows:
-      for desc in descs[key]:
-        print("{}, ".format(desc[0]), end = "")
+  rows = sqlutl.rows
+  descs = sqlutl.descs
+  for key in rows:
+    for desc in descs[key]:
+      print("{}, ".format(desc[0]), end = "")
+    print("", end = "\n")
+    for row in rows[key]:
+      for cell in row:
+        print("{}, ".format(cell), end = "")
       print("", end = "\n")
-      for row in rows[key]:
-        for cell in row:
-          print("{}, ".format(cell), end = "")
-        print("", end = "\n")
 
 if __name__ == "__main__":
   main()
