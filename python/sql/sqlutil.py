@@ -88,6 +88,22 @@ class SqlUtilBase:
     query1 = re.sub('^ +', '', query1)
     return query1
 
+  def execute1(self, sql: str, params: [] = None, is_commit: bool = True):
+    try:
+      self.logger.debug(f"execute1: {sql}, {params}")
+      self.cur.execute(sql, params)
+      self.logger.info(f"execute1: {sql}, {params}")
+      if is_commit:
+        self.logger.debug(f"commit:{sql}")
+        self.conn.commit()
+        self.logger.info(f"committed")
+    except Exception as e:
+      if is_commit:
+        self.logger.debug(f"rollback:{sql}")
+        self.conn.rollback()
+        self.logger.info(f"rolled back")
+      raise e
+
   def execute(self, sql: str, is_commit: bool = True):
     if not self.cur:
       raise Exception(Constants.EXCPT_SQLUTIL_EXEC_FAILED.format(self))
@@ -105,7 +121,7 @@ class SqlUtilBase:
         continue
       try:
         self.logger.debug(f"execute: {query1}")
-        self.cur.execute(query1)
+        self.execute1(sql = query1, is_commit = False)
         self.logger.info(f"executed: {query1}")
         try:
           self.notify(None, self.cur.description,
