@@ -84,7 +84,7 @@ class SqlUtilBase:
         if query1:
           query1 += ' '
         query1 += q1
-    query1 = re.sub('/\*.*\*/', '', query1)
+    #query1 = re.sub('/\*.*\*/', '', query1)
     query1 = re.sub('^ +', '', query1)
     return query1
 
