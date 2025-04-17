@@ -13,7 +13,7 @@ set -- $options
 while [ $# -gt 0 ]; do
   case $1 in
     --watch-path)
-      w_path=$2
+      w_path="$2"
       shift ;;
     --time-threshold)
       t_thrshld=$(date "+%s%3N" -d "$2")
@@ -27,7 +27,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if ! [ -d ${w_path} ]; then
+if ! [ -d "${w_path}" ]; then
   echo "no such directory."
   exit 1
 fi
