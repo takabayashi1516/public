@@ -5,7 +5,7 @@
 #
 
 w_path=.
-t_thrshld=
+t_thrshld=0
 drctn=11
 
 options=$(getopt -l watch-path:,time-threshold:,direction: $0 $* | sed -e "s/'//g")
@@ -32,7 +32,7 @@ if ! [ -d "${w_path}" ]; then
   exit 1
 fi
 
-if [ "${t_thrshld}" == "" ]; then
+if [ ${t_thrshld} -eq 0 ]; then
   t_thrshld=$(date "+%s%3N" -d "$(date '+%Y-%m-%d %H:%M:%S.%3N')")
 fi
 
