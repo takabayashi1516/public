@@ -65,43 +65,51 @@ class Util {
     });
   }
 
-  static contain(a, b) {
+  static contain(a, b, extractionLost = true) {
     // array case
     if (Array.isArray(a)) {
       if (!Array.isArray(b)) {
-        return a;
+        if (extractionLost) {
+          return a;
+        }
+        return null;
       }
-      const missingArray = [];
+      const extractionArray = [];
       for (let idx = 0; idx < a.length; idx++) {
-        const miss = this.contain(a[idx], b[idx]);
-        if (miss) {
-          missingArray.push(miss);
+        const extraction = this.contain(a[idx], b[idx], extractionLost);
+        if (extraction) {
+          extractionArray.push(extraction);
         }
       }
-      return (missingArray.length > 0) ? missingArray : null;
+      return (extractionArray.length > 0) ? extractionArray : null;
     }
     // object case
     if ((typeof a === 'object') && (a !== null)) {
       if ((typeof b !== 'object') || (b === null)) {
-        return a;
+        if (extractionLost) {
+          return a;
+        }
+        return null;
       }
-      let missingObject = {};
+      let extractionObject = {};
       Object.keys(a).forEach((k) => {
         if (!(k in b)) {
-          missingObject[k] = a[k];
+          if (extractionLost) {
+            extractionObject[k] = a[k];
+          }
         }
-        const miss = this.contain(a[k], b[k]);
-        if (miss) {
-          missingObject[k] = miss;
+        const extraction = this.contain(a[k], b[k], extractionLost);
+        if (extraction) {
+          extractionObject[k] = extraction;
         }
       });
-      return (Object.keys(missingObject).length > 0) ? missingObject : null;
+      return (Object.keys(extractionObject).length > 0) ? extractionObject : null;
     }
     // primitive case
-    if (a === b) {
-      return null;
+    if (extractionLost) {
+      return (a === b) ? null : a;
     }
-    return a;
+    return (a === b) ? a : null;
   }
 
 }
