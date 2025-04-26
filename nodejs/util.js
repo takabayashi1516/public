@@ -65,18 +65,18 @@ class Util {
     });
   }
 
-  static contain(a, b, extractionLost = true) {
+  static contain(a, b, extractionDiff = true) {
     // array case
     if (Array.isArray(a)) {
       if (!Array.isArray(b)) {
-        if (extractionLost) {
+        if (extractionDiff) {
           return a;
         }
         return null;
       }
       const extractionArray = [];
       for (let idx = 0; idx < a.length; idx++) {
-        const extraction = this.contain(a[idx], b[idx], extractionLost);
+        const extraction = this.contain(a[idx], b[idx], extractionDiff);
         if (extraction) {
           extractionArray.push(extraction);
         }
@@ -86,7 +86,7 @@ class Util {
     // object case
     if ((typeof a === 'object') && (a !== null)) {
       if ((typeof b !== 'object') || (b === null)) {
-        if (extractionLost) {
+        if (extractionDiff) {
           return a;
         }
         return null;
@@ -94,11 +94,11 @@ class Util {
       let extractionObject = {};
       Object.keys(a).forEach((k) => {
         if (!(k in b)) {
-          if (extractionLost) {
+          if (extractionDiff) {
             extractionObject[k] = a[k];
           }
         }
-        const extraction = this.contain(a[k], b[k], extractionLost);
+        const extraction = this.contain(a[k], b[k], extractionDiff);
         if (extraction) {
           extractionObject[k] = extraction;
         }
@@ -106,7 +106,7 @@ class Util {
       return (Object.keys(extractionObject).length > 0) ? extractionObject : null;
     }
     // primitive case
-    if (extractionLost) {
+    if (extractionDiff) {
       return (a === b) ? null : a;
     }
     return (a === b) ? a : null;
