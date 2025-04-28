@@ -112,5 +112,55 @@ class Util {
     return (a === b) ? a : null;
   }
 
+  static arr2tbl(arr) {
+    const tbl = [];
+    if (!Array.isArray(arr)) {
+      let row = {};
+      this.#obj2tblelement_(arr, '', row);
+      tbl.push(row);
+      return tbl;
+    }
+    arr.forEach((elem, idx) => {
+      let row = {};
+      this.#obj2tblelement_(elem, '', row);
+      tbl.push(row);
+    });
+    const header = [];
+    tbl.forEach((r) => {
+      Object.keys(r).forEach((c) => {
+        if (header.indexOf(c) < 0) {
+          header.push(c);
+        }
+      });
+    });
+    tbl.forEach((r) => {
+      const clmns = Object.keys(r);
+      header.forEach((fld) => {
+        if (clmns.indexOf(fld) < 0) {
+          r[fld] = null;
+        }
+      });
+    });
+    return tbl;
+  }
+
+  static #obj2tblelement_(objct, key, tblelement) {
+    if (Array.isArray(objct)) {
+      objct.forEach((v, i) => {
+        const nkey = `${key}[${i}]`;
+        this.#obj2tblelement_(v, nkey, tblelement);
+      });
+      return;
+    }
+    if ((typeof objct === 'object') && (objct !== null)) {
+      for (let k in objct) {
+        const nkey = `${key}.${k}`;
+        this.#obj2tblelement_(objct[k], nkey, tblelement);
+      }
+      return;
+    }
+    tblelement[key] = objct;
+  }
+
 }
 exports.Util = Util;
