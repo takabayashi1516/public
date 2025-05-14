@@ -91,7 +91,10 @@ class SqlUtilBase:
   def execute1(self, sql: str, params: [] = None, is_commit: bool = True):
     try:
       self.logger.debug(f"execute1: {sql}, {params}")
-      self.cur.execute(sql, params)
+      if (params):
+        self.cur.execute(sql, params)
+      else:
+        self.cur.execute(sql)
       self.logger.info(f"execute1: {sql}, {params}")
       if is_commit:
         self.logger.debug(f"commit:{sql}")
