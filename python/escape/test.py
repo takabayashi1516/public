@@ -3,7 +3,7 @@ import sys
 sys.path.append('/path/to/escape')
 '''
 
-from escape import escape_string
+from escape import ( escape_string, conv_from_list )
 
 # 入力例
 original_string = "これは改行を含む文字列です。\nそしてタブ\tも含みます。"
@@ -26,3 +26,12 @@ print("\nエスケープ文字列:")
 print(escaped_string)
 print("\n★★★元の制御文字を含む文字列:")
 print(original_string)
+
+
+
+
+rc = conv_from_list([
+    ['(?<!\r)\n', ' '],
+  ], 'aaa\r\nbbb\naaaa\nbbbb\r\n', direct_lr = True, is_regex = True)
+
+print(rc)
