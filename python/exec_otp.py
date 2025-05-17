@@ -17,8 +17,9 @@ import logging
 from otp.libotp import (
     LibOtp,
   )
-
-from escape.escape import escape_string
+from util.util import (
+    Util,
+  )
 
 '''
 $ python -c "import exec_otp; exec_otp.print_totp_qr(${image_path})"
@@ -77,7 +78,7 @@ def main():
         rc = LibOtp().confirm_totp(args.sk, args.totp)
         logger.info(f"confirm_totp={rc}")
         return
-      logger.debug("escape:{}".format(escape_string(args.sk, True)))
+      logger.debug("escape:{}".format(Util.escape_string(args.sk, True)))
       logger.debug("raw   :{}".format(args.sk))
       print_totp_secret_key(args.sk)
       return
