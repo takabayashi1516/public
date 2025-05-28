@@ -82,7 +82,7 @@ class SqlUtilBase:
       q1 = re.sub('^((\t)|( ))*\-\- +.*$', '', q)
       if q1:
         if query1:
-          query1 += ' '
+          query1 += '\n'
         query1 += q1
     #query1 = re.sub('/\*.*\*/', '', query1)
     query1 = re.sub('^ +', '', query1)
