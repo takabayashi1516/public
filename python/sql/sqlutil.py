@@ -79,7 +79,7 @@ class SqlUtilBase:
     queries = query1.split('\n')
     query1 = ''
     for q in queries:
-      q1 = re.sub('^((\t)|( ))*\-\- +.*$', '', q)
+      q1 = re.sub('^((\t)|( ))*\-\-((\t)|( ))+.*$', '', q)
       if q1:
         if query1:
           query1 += '\n'
