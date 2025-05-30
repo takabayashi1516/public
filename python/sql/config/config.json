@@ -1,0 +1,18 @@
+{
+  // 
+  host: "localhost",
+  // 
+  user: "root",
+  // 
+  password: "passwd",
+  // ORACLESQLの場合はサービス
+  database: "test",
+  // 
+  port: 0,
+  /*
+    0: MYSQL
+    1: POSTGRESQL
+    2: ORACLESQL
+  */
+  engine: 0,
+}

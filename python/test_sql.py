@@ -59,9 +59,11 @@ class CustomOracleSqlUtil(OracleSqlUtil):
 
 @dataclass(frozen = True)
 class Constants:
+  '''
   DB_ENGINE_MYSQL: int = 0
   DB_ENGINE_POSTGRESQL: int = 1
   DB_ENGINE_ORACLESQL: int = 2
+  '''
 
   LOG_LEVELS = {
       0: logging.CRITICAL,
