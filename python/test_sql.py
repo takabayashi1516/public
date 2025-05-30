@@ -1,13 +1,61 @@
 import argparse
 import logging
+import json5
 from dataclasses import dataclass, field
-
 from sql.sqlutil import (
     Constants as SqlUtilConstants,
     PostgreSqlUtil,
     MySqlUtil,
     OracleSqlUtil
   )
+
+class CustomPostgreSqlUtil(PostgreSqlUtil):
+  def __init__(self, host: str, user: str, password: str,
+      database: str, notify_param = None,
+      port: int = SqlUtilConstants.DEFULT_PORT_POSTGRESQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
+    self.descs = {}
+    self.rows = {}
+
+  def notify(self, e, description: tuple, datas: tuple, notify_param):
+    for desc in description:
+      pass
+    self.descs[notify_param] = description
+    self.rows[notify_param] = datas
+    self.set_notify_pram(notify_param + 1)
+
+class CustomMySqlUtil(MySqlUtil):
+  def __init__(self, host: str, user: str, password: str,
+      database: str, notify_param = None,
+      port: int = SqlUtilConstants.DEFULT_PORT_MYSQL):
+    super().__init__(host, user, password, database,
+        notify_param, port)
+    self.descs = {}
+    self.rows = {}
+
+  def notify(self, e, description: tuple, datas: tuple, notify_param):
+    for desc in description:
+      pass
+    self.descs[notify_param] = description
+    self.rows[notify_param] = datas
+    self.set_notify_pram(notify_param + 1)
+
+class CustomOracleSqlUtil(OracleSqlUtil):
+  def __init__(self, host: str, user: str, password: str,
+      service_name: str, notify_param = None,
+      port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
+    super().__init__(host, user, password, service_name,
+        notify_param, port)
+    self.descs = {}
+    self.rows = {}
+
+  def notify(self, e, description: tuple, datas: tuple, notify_param):
+    for desc in description:
+      pass
+    self.descs[notify_param] = description
+    self.rows[notify_param] = datas
+    self.set_notify_pram(notify_param + 1)
 
 @dataclass(frozen = True)
 class Constants:
@@ -24,102 +72,51 @@ class Constants:
       5: logging.NOTSET,
     }
 
-class CustomPostgreSqlUtil(PostgreSqlUtil):
-  def __init__(self, host: str, user: str, password: str,
-      database: str, notify_param = None,
-      port: int = SqlUtilConstants.DEFULT_PORT_POSTGRESQL):
-    super().__init__(host, user, password, database,
-        notify_param, port)
-    self.descs = {}
-    self.rows = {}
+  CLASSES = (
+      CustomMySqlUtil,
+      CustomPostgreSqlUtil,
+      CustomOracleSqlUtil,
+    )
 
-  def notify(self, e, description, notify_param):
-    for desc in description:
-      pass
-    self.descs[notify_param] = description
-    self.rows[notify_param] = self.fetchall()
-    self.set_notify_pram(notify_param + 1)
-
-class CustomMySqlUtil(MySqlUtil):
-  def __init__(self, host: str, user: str, password: str,
-      database: str, notify_param = None,
-      port: int = SqlUtilConstants.DEFULT_PORT_MYSQL):
-    super().__init__(host, user, password, database,
-        notify_param, port)
-    self.descs = {}
-    self.rows = {}
-
-  def notify(self, e, description, notify_param):
-    for desc in description:
-      pass
-    self.descs[notify_param] = description
-    self.rows[notify_param] = self.fetchall()
-    self.set_notify_pram(notify_param + 1)
-
-class CustomOracleSqlUtil(OracleSqlUtil):
-  def __init__(self, host: str, user: str, password: str,
-      service_name: str, notify_param = None,
-      port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
-    super().__init__(host, user, password, service_name,
-        notify_param, port)
-    self.descs = {}
-    self.rows = {}
-
-  def notify(self, e, description, notify_param):
-    for desc in description:
-      pass
-    self.descs[notify_param] = description
-    self.rows[notify_param] = self.fetchall()
-    self.set_notify_pram(notify_param + 1)
+  DEFAULT_PORTS = (
+      SqlUtilConstants.DEFULT_PORT_MYSQL,
+      SqlUtilConstants.DEFULT_PORT_POSTGRESQL,
+      SqlUtilConstants.DEFULT_PORT_ORACLESQL,
+    )
 
 def main():
   parser = argparse.ArgumentParser(description = "")
-  parser.add_argument("--host", default = 'localhost')
-  parser.add_argument("--user", default = 'root')
-  parser.add_argument("--password")
-  parser.add_argument("--database")
-  parser.add_argument("--port", type = int, default = 0)
+  parser.add_argument("--config", default = 'config.json')
   parser.add_argument("--query")
   parser.add_argument("--sql")
   parser.add_argument("--commit", action = 'store_true', default = False)
-  parser.add_argument("--engine", type = int, default = Constants.DB_ENGINE_MYSQL)
   parser.add_argument("--log", type = int, default = 0)
   args = parser.parse_args()
 
   logging.basicConfig(level = Constants.LOG_LEVELS[args.log])
   logger = logging.getLogger(name = __name__)
 
+  try:
+    with open(args.config, 'r', encoding = 'utf-8') as f:
+      config = json5.load(f)
+  except Exception as e:
+    logger.error(e)
+    return
+
   sqlutl = None
-  port = args.port
+  port = config['port']
   pram = 0
 
-  if args.engine == Constants.DB_ENGINE_MYSQL:
-    if port == 0:
-      port = SqlUtilConstants.DEFULT_PORT_MYSQL
-    sqlutl = CustomMySqlUtil(host = args.host,
-        user = args.user,
-        password = args.password,
-        database = args.database,
-        notify_param = pram,
-        port = port)
-  elif args.engine == Constants.DB_ENGINE_POSTGRESQL:
-    if port == 0:
-      port = SqlUtilConstants.DEFULT_PORT_POSTGRESQL
-    sqlutl = CustomPostgreSqlUtil(host = args.host,
-        user = args.user,
-        password = args.password,
-        database = args.database,
-        notify_param = pram,
-        port = port)
-  elif args.engine == Constants.DB_ENGINE_ORACLESQL:
-    if port == 0:
-      port = SqlUtilConstants.DEFULT_PORT_ORACLESQL
-    sqlutl = CustomOracleSqlUtil(host = args.host,
-        user = args.user,
-        password = args.password,
-        service_name = args.database,
-        notify_param = pram,
-        port = port)
+  cls = Constants.CLASSES[config['engine']]
+
+  if port == 0:
+    port = Constants.DEFAULT_PORTS[config['engine']]
+  sqlutl = cls(host = config['host'],
+      user = config['user'],
+      password = config['password'],
+      database = config['database'],
+      notify_param = pram,
+      port = port)
 
   try:
     sqlutl.connect()

@@ -88,21 +88,27 @@ class SqlUtilBase:
     query1 = re.sub('^ +', '', query1)
     return query1
 
-  def execute1(self, sql: str, params: [] = None, is_commit: bool = True):
+  def execute1(self, query: str, params: [] = None, is_commit: bool = True):
+    query1 = self.__exclude_comments(query = query)
+    if not query1:
+      return None, None
     try:
-      self.logger.debug(f"execute1: {sql}, {params}")
+      self.logger.debug(f"execute1: {query1}, {params}")
       if (params):
-        self.cur.execute(sql, params)
+        self.cur.execute(query1, params)
       else:
-        self.cur.execute(sql)
-      self.logger.info(f"execute1: {sql}, {params}")
+        self.cur.execute(query1)
+      self.logger.info(f"execute1: {query1}, {params}")
+      if self.cur.description is not None:
+        return self.fetchall(), self.cur.description
       if is_commit:
-        self.logger.debug(f"commit:{sql}")
+        self.logger.debug(f"commit:{query1}")
         self.conn.commit()
         self.logger.info(f"committed")
+      return None, None
     except Exception as e:
       if is_commit:
-        self.logger.debug(f"rollback:{sql}")
+        self.logger.debug(f"rollback:{query1}")
         self.conn.rollback()
         self.logger.info(f"rolled back")
       raise e
@@ -119,23 +125,20 @@ class SqlUtilBase:
       raise e
 
     for query in queries:
-      query1 = self.__exclude_comments(query)
-      if not query1:
-        continue
       try:
-        self.logger.debug(f"execute: {query1}")
-        self.execute1(sql = query1, is_commit = False)
-        self.logger.info(f"executed: {query1}")
-        try:
-          self.notify(None, self.cur.description,
-              self.notify_param)
-        except Exception as e1:
-          #pass
-          self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
+        self.logger.debug(f"execute: {query}")
+        r, h = self.execute1(query = query, is_commit = False)
+        self.logger.debug(f"executed: {query}")
+        if r:
+          try:
+            self.notify(None, h, r, self.notify_param)
+          except Exception as e1:
+            #pass
+            self.logger.debug(f"desc:{self.cur.description}, param:{self.notify_param}")
       except Exception as e:
-        self.logger.error(f"error: {query1}")
+        self.logger.error(f"error: {query}")
         try:
-          self.notify(e, self.cur.description,
+          self.notify(e, self.cur.description, None,
               self.notify_param)
         except Exception as e1:
           #pass
@@ -158,7 +161,7 @@ class SqlUtilBase:
       sql = f.read()
       self.execute(sql = sql, is_commit = is_commit)
 
-  def notify(self, err: Exception, description, notify_param):
+  def notify(self, err: Exception, description: tuple, datas: tuple, notify_param):
     return
 
   def fetchall(self):
