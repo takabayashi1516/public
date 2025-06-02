@@ -8,6 +8,7 @@ from sql.sqlutil import (
     MySqlUtil,
     OracleSqlUtil
   )
+from proc.prcctrl import ( ProcessController )
 
 class CustomPostgreSqlUtil(PostgreSqlUtil):
   def __init__(self, host: str, user: str, password: str,
@@ -113,8 +114,25 @@ def main():
 
   if port == 0:
     port = Constants.DEFAULT_PORTS[config['engine']]
-  sqlutl = cls(host = config['host'],
-      user = config['user'],
+
+  host = config['host']
+  user = config['user']
+
+  proc_ssh = None
+
+  if 'ssh' in config:
+    cmd = [
+        'ssh', '-N', '-L',
+        f"{port}:{config['ssh']['host']}:{config['ssh']['port']}",
+        f"{user}@{host}",
+      ]
+    if 'privateKeyPath' in config['ssh']:
+      cmd.append('-i').append(config['ssh']['privateKeyPath'])
+    proc_ssh = ProcessController(cmd)
+    proc_ssh.start()
+
+  sqlutl = cls(host = host,
+      user = user,
       password = config['password'],
       database = config['database'],
       notify_param = pram,
@@ -124,6 +142,8 @@ def main():
     sqlutl.connect()
   except Exception as e:
     logger.error(e)
+    if proc_ssh:
+      proc_ssh.stop()
     return
 
   if args.sql:
@@ -131,6 +151,9 @@ def main():
 
   if args.query:
     sqlutl.execute(args.query, args.commit)
+
+  if proc_ssh:
+    proc_ssh.stop()
 
   rows = sqlutl.rows
   descs = sqlutl.descs
