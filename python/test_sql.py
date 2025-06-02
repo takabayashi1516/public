@@ -43,9 +43,9 @@ class CustomMySqlUtil(MySqlUtil):
 
 class CustomOracleSqlUtil(OracleSqlUtil):
   def __init__(self, host: str, user: str, password: str,
-      service_name: str, notify_param = None,
+      database: str, notify_param = None,
       port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
-    super().__init__(host, user, password, service_name,
+    super().__init__(host, user, password, database,
         notify_param, port)
     self.descs = {}
     self.rows = {}

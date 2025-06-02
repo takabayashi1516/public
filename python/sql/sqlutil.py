@@ -212,10 +212,10 @@ class MySqlUtil(SqlUtilBase):
 '''
 class OracleSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
-      service_name: str, notify_param = None,
+      database: str, notify_param = None,
       port: int = Constants.DEFULT_PORT_ORACLESQL):
-    super().__init__(host = host, user = user, password = password,
-        database = service_name, notify_param = notify_param, port = port)
+    super().__init__(host, user, password, database,
+        notify_param, port)
 
   def connect(self):
     super().disconnect()
