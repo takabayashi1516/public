@@ -115,7 +115,6 @@ def main():
   if port == 0:
     port = Constants.DEFAULT_PORTS[config['engine']]
 
-  host = config['host']
   user = config['user']
 
   proc_ssh = None
@@ -123,15 +122,15 @@ def main():
   if 'ssh' in config:
     cmd = [
         'ssh', '-N', '-L',
-        f"{port}:{config['ssh']['host']}:{config['ssh']['port']}",
-        f"{user}@{host}",
+        f"{port}:{config['ssh']['dbHost']}:{config['ssh']['port']}",
+        f"{user}@{config['ssh']['sshHost']}",
       ]
     if 'privateKeyPath' in config['ssh']:
       cmd.append('-i').append(config['ssh']['privateKeyPath'])
     proc_ssh = ProcessController(cmd)
     proc_ssh.start()
 
-  sqlutl = cls(host = host,
+  sqlutl = cls(host = config['host'],
       user = user,
       password = config['password'],
       database = config['database'],

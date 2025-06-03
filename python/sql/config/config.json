@@ -19,7 +19,8 @@
 
   /*
   ssh: {
-    host: "localhost",
+    sshHost: "localhost",
+    dbHost: "localhost",
     // DBサーバポートを指定
     port: 5432,
     privateKeyPath: "",
