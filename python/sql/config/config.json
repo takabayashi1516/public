@@ -20,6 +20,7 @@
   /*
   ssh: {
     sshHost: "localhost",
+    sshUser: "",
     dbHost: "localhost",
     // DBサーバポートを指定
     port: 5432,

@@ -123,10 +123,11 @@ def main():
     cmd = [
         'ssh', '-N', '-L',
         f"{port}:{config['ssh']['dbHost']}:{config['ssh']['port']}",
-        f"{user}@{config['ssh']['sshHost']}",
+        f"{config['ssh']['sshUser']}@{config['ssh']['sshHost']}",
       ]
     if 'privateKeyPath' in config['ssh']:
-      cmd.append('-i').append(config['ssh']['privateKeyPath'])
+      cmd.append('-i')
+      cmd.append(config['ssh']['privateKeyPath'])
     proc_ssh = ProcessController(cmd)
     proc_ssh.start()
 

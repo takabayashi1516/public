@@ -10,7 +10,8 @@ class ProcessController:
   def start(self):
     if self.process is not None:
       raise RuntimeError("Process already started")
-    self.process = subprocess.Popen(self.cmd, cwd=self.cwd)
+    self.process = subprocess.Popen(self.cmd, cwd = self.cwd)
+    self.process.wait()
     return self.process
 
   def stop(self, force: bool = False):
