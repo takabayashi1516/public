@@ -129,7 +129,7 @@ def main():
       cmd.append('-i')
       cmd.append(config['ssh']['privateKeyPath'])
     proc_ssh = ProcessController(cmd)
-    proc_ssh.start()
+    proc_ssh.start(1)
 
   sqlutl = cls(host = config['host'],
       user = user,

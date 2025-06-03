@@ -6,17 +6,23 @@ from prcctrl import ProcessController
 async def main():
 
   # SSH トンネルコマンド
+  '''
   cmd = [
     'ssh',
     '-N',                       # コマンド実行なし
     '-L', '2345:localhost:5432',  # ローカルポート:宛先ホスト:宛先ポート
     'user@remotehost'
   ]
+  '''
+  cmd = [
+    'sleep',
+    '10',
+  ]
 
   pctrl = ProcessController(cmd)
 
   # トンネル開始
-  ssh_proc = pctrl.start()
+  ssh_proc = pctrl.start(1)
 
   print(f'timer start')
   try:
