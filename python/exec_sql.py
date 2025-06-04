@@ -9,6 +9,7 @@ from sql.sqlutil import (
     OracleSqlUtil
   )
 from proc.prcctrl import ( ProcessController )
+from util.util import ( Util )
 
 class CustomPostgreSqlUtil(PostgreSqlUtil):
   def __init__(self, host: str, user: str, password: str,
@@ -115,6 +116,7 @@ def main():
   if port == 0:
     port = Constants.DEFAULT_PORTS[config['engine']]
 
+  host = config['host']
   user = config['user']
 
   proc_ssh = None
@@ -129,9 +131,13 @@ def main():
       cmd.append('-i')
       cmd.append(config['ssh']['privateKeyPath'])
     proc_ssh = ProcessController(cmd)
-    proc_ssh.start(1)
+    proc_ssh.start()
+    r = Util.wait_for_port(host = host, port = port,
+            timeout = 10.0, interval = 0.5)
+    if not r:
+      return
 
-  sqlutl = cls(host = config['host'],
+  sqlutl = cls(host = host,
       user = user,
       password = config['password'],
       database = config['database'],

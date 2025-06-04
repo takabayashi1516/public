@@ -5,6 +5,7 @@ import json
 import random
 import re
 import os
+import socket
 import sys
 import time
 import pandas as pd
@@ -181,3 +182,21 @@ class Util:
         outp_str = outp_str.replace(cnv[i0], cnv[i1])
     return outp_str
 
+  @staticmethod
+  def is_port_open(host: str, port: int, timeout: float = 1.0) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+      sock.settimeout(timeout)
+      try:
+        sock.connect((host, port))
+      except (socket.timeout, ConnectionRefusedError, OSError):
+        return False
+      return True
+
+  @staticmethod
+  def wait_for_port(host: str, port: int, timeout: float, interval: float = 1.0) -> bool:
+    t = time.time() + timeout
+    while not Util.is_port_open(host, port):
+      time.sleep(interval)
+      if t < time.time():
+        return False
+    return True
