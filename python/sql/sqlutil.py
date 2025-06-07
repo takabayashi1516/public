@@ -88,7 +88,11 @@ class SqlUtilBase:
     query1 = re.sub('^ +', '', query1)
     return query1
 
-  def execute1(self, query: str, params: [] = None, is_commit: bool = True):
+  '''
+  大量データをfetchする場合はfetch_countを用い本メソッドにて実行すること
+  '''
+  def execute1(self, query: str, params: [] = None,
+      is_commit: bool = True, fetch_count: int = 0):
     query1 = self.__exclude_comments(query = query)
     if not query1:
       return None, None
@@ -100,7 +104,9 @@ class SqlUtilBase:
         self.cur.execute(query1)
       self.logger.info(f"execute1: {query1}, {params}")
       if self.cur.description is not None:
-        return self.fetchall(), self.cur.description
+        if fetch_count <= 0:
+          return self.fetchall(), self.cur.description
+        return self.fetchmany(fetch_count), self.cur.description
       if is_commit:
         self.logger.debug(f"commit:{query1}")
         self.conn.commit()
@@ -168,6 +174,13 @@ class SqlUtilBase:
     if self.cur:
       self.logger.debug(self.cur.description)
       return self.cur.fetchall()
+    raise Exception(Constants.EXCPT_SQLUTIL_CONN_NOT_EXIST.format(self))
+    return None
+
+  def fetchmany(self, count: int):
+    if self.cur:
+      self.logger.debug(self.cur.description)
+      return self.cur.fetchmany(count)
     raise Exception(Constants.EXCPT_SQLUTIL_CONN_NOT_EXIST.format(self))
     return None
 

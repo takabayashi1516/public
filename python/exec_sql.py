@@ -89,12 +89,12 @@ class Constants:
     )
 
 def main():
-  parser = argparse.ArgumentParser(description = "")
-  parser.add_argument("--config", default = 'config.json')
-  parser.add_argument("--query")
-  parser.add_argument("--sql")
-  parser.add_argument("--commit", action = 'store_true', default = False)
-  parser.add_argument("--log", type = int, default = 0)
+  parser = argparse.ArgumentParser(description = '')
+  parser.add_argument('--config', default = 'config.json')
+  parser.add_argument('--query', type = str, default = None)
+  parser.add_argument('--sql', type = str, default = None)
+  parser.add_argument('--commit', action = 'store_true', default = False)
+  parser.add_argument('--log', type = int, default = 0)
   args = parser.parse_args()
 
   logging.basicConfig(level = Constants.LOG_LEVELS[args.log])
@@ -153,13 +153,29 @@ def main():
     return
 
   if args.sql:
-    sqlutl.executeSql(args.sql, args.commit)
-
-  if args.query:
-    sqlutl.execute(args.query, args.commit)
+    sqlutl.executeSql(sql_file = args.sql,
+        is_commit = args.commit)
 
   if proc_ssh:
     proc_ssh.stop()
+
+  fetch_count = 100
+  if args.query:
+    rows, descs = sqlutl.execute1(query = args.query,
+        is_commit = args.commit,
+        fetch_count = fetch_count)
+
+    if rows:
+      for desc in descs:
+        print("{}, ".format(desc[0]), end = "")
+      print("")
+
+    while rows:
+      for row in rows:
+        for cell in row:
+          print("{}, ".format(cell), end = "")
+        print("", end = "\n")
+      rows = sqlutl.fetchmany(fetch_count)
 
   rows = sqlutl.rows
   descs = sqlutl.descs
