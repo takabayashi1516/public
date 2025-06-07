@@ -36,7 +36,6 @@ class Constants:
   DEFAULT_PORT_POSTGRESQL: int = 5432
   DEFAULT_PORT_MYSQL: int = 3306
   DEFAULT_PORT_ORACLESQL: int = 1521
-  EXCPT_SQLUTIL_CONN_DENY: str = 'deny to call base method: {}'
   EXCPT_SQLUTIL_CONN_NOT_EXIST: str = 'no exist conn: {}'
   EXCPT_SQLUTIL_EXEC_FAILED: str = 'execute failed: {}'
   EXCPT_SQLUTIL_EXEC_FILE_NOT_EXIST: str = 'execute script file {} not exist: {}'
@@ -63,7 +62,7 @@ class SqlUtilBase:
 
   @abstractmethod
   def connect(self):
-    raise Exception(Constants.EXCPT_SQLUTIL_CONN_DENY.format(self))
+    pass
 
   def disconnect(self):
     if self.cur:
