@@ -14,7 +14,7 @@ from util.util import ( Util )
 class CustomPostgreSqlUtil(PostgreSqlUtil):
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param = None,
-      port: int = SqlUtilConstants.DEFULT_PORT_POSTGRESQL):
+      port: int = SqlUtilConstants.DEFAULT_PORT_POSTGRESQL):
     super().__init__(host, user, password, database,
         notify_param, port)
     self.descs = {}
@@ -30,7 +30,7 @@ class CustomPostgreSqlUtil(PostgreSqlUtil):
 class CustomMySqlUtil(MySqlUtil):
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param = None,
-      port: int = SqlUtilConstants.DEFULT_PORT_MYSQL):
+      port: int = SqlUtilConstants.DEFAULT_PORT_MYSQL):
     super().__init__(host, user, password, database,
         notify_param, port)
     self.descs = {}
@@ -46,7 +46,7 @@ class CustomMySqlUtil(MySqlUtil):
 class CustomOracleSqlUtil(OracleSqlUtil):
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param = None,
-      port: int = SqlUtilConstants.DEFULT_PORT_ORACLESQL):
+      port: int = SqlUtilConstants.DEFAULT_PORT_ORACLESQL):
     super().__init__(host, user, password, database,
         notify_param, port)
     self.descs = {}
@@ -83,9 +83,9 @@ class Constants:
     )
 
   DEFAULT_PORTS = (
-      SqlUtilConstants.DEFULT_PORT_MYSQL,
-      SqlUtilConstants.DEFULT_PORT_POSTGRESQL,
-      SqlUtilConstants.DEFULT_PORT_ORACLESQL,
+      SqlUtilConstants.DEFAULT_PORT_MYSQL,
+      SqlUtilConstants.DEFAULT_PORT_POSTGRESQL,
+      SqlUtilConstants.DEFAULT_PORT_ORACLESQL,
     )
 
 def main():

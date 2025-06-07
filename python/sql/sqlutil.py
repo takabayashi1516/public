@@ -27,14 +27,15 @@ import psycopg2
 import pymysql
 import re
 import sqlparse
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import getLogger
 
 @dataclass(frozen = True)
 class Constants:
-  DEFULT_PORT_POSTGRESQL: int = 5432
-  DEFULT_PORT_MYSQL: int = 3306
-  DEFULT_PORT_ORACLESQL: int = 1521
+  DEFAULT_PORT_POSTGRESQL: int = 5432
+  DEFAULT_PORT_MYSQL: int = 3306
+  DEFAULT_PORT_ORACLESQL: int = 1521
   EXCPT_SQLUTIL_CONN_DENY: str = 'deny to call base method: {}'
   EXCPT_SQLUTIL_CONN_NOT_EXIST: str = 'no exist conn: {}'
   EXCPT_SQLUTIL_EXEC_FAILED: str = 'execute failed: {}'
@@ -60,6 +61,7 @@ class SqlUtilBase:
     self.notify_param = None
     self.logger = None
 
+  @abstractmethod
   def connect(self):
     raise Exception(Constants.EXCPT_SQLUTIL_CONN_DENY.format(self))
 
@@ -189,7 +191,7 @@ class SqlUtilBase:
 class PostgreSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param = None,
-      port: int = Constants.DEFULT_PORT_POSTGRESQL):
+      port: int = Constants.DEFAULT_PORT_POSTGRESQL):
     super().__init__(host, user, password, database,
         notify_param, port)
 
@@ -208,7 +210,7 @@ class PostgreSqlUtil(SqlUtilBase):
 class MySqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param = None,
-      port: int = Constants.DEFULT_PORT_MYSQL):
+      port: int = Constants.DEFAULT_PORT_MYSQL):
     super().__init__(host, user, password, database,
         notify_param, port)
 
@@ -226,7 +228,7 @@ class MySqlUtil(SqlUtilBase):
 class OracleSqlUtil(SqlUtilBase):
   def __init__(self, host: str, user: str, password: str,
       database: str, notify_param = None,
-      port: int = Constants.DEFULT_PORT_ORACLESQL):
+      port: int = Constants.DEFAULT_PORT_ORACLESQL):
     super().__init__(host, user, password, database,
         notify_param, port)
 
