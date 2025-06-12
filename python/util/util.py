@@ -203,8 +203,8 @@ class Util:
 
   @staticmethod
   def wait_for_keyword(process, keyword) -> bool:
-    for line in iter(process.stdout.readline, b""):
-      decoded = line.decode("utf-8", errors = "ignore").strip()
+    for line in iter(process.stdout.readline, ''):
+      decoded = line.strip()
       if keyword in decoded:
         return True
     return False

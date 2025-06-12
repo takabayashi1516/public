@@ -131,13 +131,13 @@ def main():
       cmd.append('-i')
       cmd.append(config['ssh']['privateKeyPath'])
     proc_ssh = ProcessController(cmd)
-    proc_ssh.start()
+    prc = proc_ssh.start()
     r = Util.wait_for_port(host = host, port = port,
             timeout = 10.0, interval = 0.5)
     if not r:
       logger.warning('not ready port')
       return
-    r = Util.wait_for_keyword(proc_ssh, 'Local forwarding listening on')
+    r = Util.wait_for_keyword(prc, 'Local forwarding listening on')
     if not r:
       logger.warning('not ready ssh process')
       return
