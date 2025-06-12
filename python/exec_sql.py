@@ -161,9 +161,6 @@ def main():
     sqlutl.executeSql(sql_file = args.sql,
         is_commit = args.commit)
 
-  if proc_ssh:
-    proc_ssh.stop()
-
   fetch_count = 100
   if args.query:
     rows, descs = sqlutl.execute1(query = args.query,
@@ -181,6 +178,9 @@ def main():
           print("{}, ".format(cell), end = "")
         print("", end = "\n")
       rows = sqlutl.fetchmany(fetch_count)
+
+  if proc_ssh:
+    proc_ssh.stop()
 
   rows = sqlutl.rows
   descs = sqlutl.descs
