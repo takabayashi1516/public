@@ -123,7 +123,7 @@ def main():
 
   if 'ssh' in config:
     cmd = [
-        'ssh', '-N', '-L',
+        'ssh', '-v', '-N', '-L',
         f"{port}:{config['ssh']['dbHost']}:{config['ssh']['port']}",
         f"{config['ssh']['sshUser']}@{config['ssh']['sshHost']}",
       ]
@@ -135,6 +135,11 @@ def main():
     r = Util.wait_for_port(host = host, port = port,
             timeout = 10.0, interval = 0.5)
     if not r:
+      logger.warning('not ready port')
+      return
+    r = Util.wait_for_keyword(proc_ssh, 'Local forwarding listening on')
+    if not r:
+      logger.warning('not ready ssh process')
       return
 
   sqlutl = cls(host = host,

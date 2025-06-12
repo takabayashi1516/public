@@ -200,3 +200,11 @@ class Util:
       if t < time.time():
         return False
     return True
+
+  @staticmethod
+  def wait_for_keyword(process, keyword) -> bool:
+    for line in iter(process.stdout.readline, b""):
+      decoded = line.decode("utf-8", errors = "ignore").strip()
+      if keyword in decoded:
+        return True
+    return False
