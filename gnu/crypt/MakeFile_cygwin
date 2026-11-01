@@ -1,0 +1,27 @@
+PROGRAM = libsrmcrypt.dll
+
+OBJS = crypt.o
+
+CXX = g++
+
+CPPFLAGS  = -I./
+CPPFLAGS += -I${OPENSSL_HOME}/include
+
+CXXFLAGS  = -Wall
+CXXFLAGS += -Wno-deprecated-declarations
+CXXFLAGS += -O3
+CXXFLAGS += -fpermissive
+
+LDFLAGS = -shared
+
+LIBS  = -L${OPENSSL_HOME}/lib/VC/x64/MD
+LIBS += -lssl
+LIBS += -lcrypto
+
+$(PROGRAM): $(OBJS)
+	$(CXX) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+clean:
+	$(RM) $(PROGRAM) $(OBJS)
+
+.PHONY: clean
