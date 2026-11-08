@@ -1,0 +1,27 @@
+PROGRAM = ../test.exe
+
+CXX = g++
+
+OBJS = \
+	test.o
+
+CPPFLAGS = -I../include
+CPPFLAGS += -I${OPENSSL_HOME}/include
+
+CXXFLAGS = -Wall
+CXXFLAGS += -O3
+CXXFLAGS += -fpermissive
+
+LIBS  = -L..
+LIBS += ../libsrmcrypt.so
+
+$(PROGRAM): $(OBJS)
+	$(CXX) -o $@ $^ $(LIBS)
+
+%.o: %.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	$(RM) $(PROGRAM) $(OBJS)
+
+.PHONY: clean
